@@ -1,0 +1,117 @@
+public class com.example.smssenderOrig.MainActivity extends android.app.Activity
+{
+    public static final java.lang.String EXTRA_MESSAGE;
+    public static java.lang.Class class$com$example$smssenderOrig$DisplayMessageActivity;
+
+    static void <clinit>()
+    {
+        java.lang.String temp$0;
+
+        temp$0 = "com.example.smssenderOrig.MESSAGE";
+        <com.example.smssenderOrig.MainActivity: java.lang.String EXTRA_MESSAGE> = temp$0;
+        return;
+    }
+
+    protected void onCreate(android.os.Bundle)
+    {
+        com.example.smssenderOrig.MainActivity this;
+        android.os.Bundle savedInstanceState;
+
+        this := @this: com.example.smssenderOrig.MainActivity;
+        savedInstanceState := @parameter0: android.os.Bundle;
+        specialinvoke this.<android.app.Activity: void onCreate(android.os.Bundle)>(savedInstanceState);
+        virtualinvoke this.<com.example.smssenderOrig.MainActivity: void setContentView(int)>(2130903041);
+        return;
+    }
+
+    public boolean onCreateOptionsMenu(android.view.Menu)
+    {
+        com.example.smssenderOrig.MainActivity this;
+        android.view.Menu menu;
+        android.view.MenuInflater temp$0;
+        boolean temp$1;
+
+        this := @this: com.example.smssenderOrig.MainActivity;
+        menu := @parameter0: android.view.Menu;
+        temp$0 = virtualinvoke this.<com.example.smssenderOrig.MainActivity: android.view.MenuInflater getMenuInflater()>();
+        virtualinvoke temp$0.<android.view.MenuInflater: void inflate(int,android.view.Menu)>(2131165185, menu);
+        temp$1 = 1;
+        return temp$1;
+    }
+
+    public void sendMessage(android.view.View)
+    {
+        com.example.smssenderOrig.MainActivity this;
+        android.view.View view, temp$4;
+        android.content.Intent intent, temp$0, temp$7;
+        java.lang.Class temp$1, temp$2, temp$3;
+        android.widget.EditText editText;
+        java.lang.String message, temp$6;
+        android.text.Editable temp$5;
+
+        this := @this: com.example.smssenderOrig.MainActivity;
+        view := @parameter0: android.view.View;
+        temp$0 = new android.content.Intent;
+        temp$2 = <com.example.smssenderOrig.MainActivity: java.lang.Class class$com$example$smssenderOrig$DisplayMessageActivity>;
+        if temp$2 != null goto label0;
+
+        temp$3 = staticinvoke <com.example.smssenderOrig.MainActivity: java.lang.Class class$(java.lang.String)>("com.example.smssenderOrig.DisplayMessageActivity");
+        <com.example.smssenderOrig.MainActivity: java.lang.Class class$com$example$smssenderOrig$DisplayMessageActivity> = temp$3;
+        temp$1 = temp$3;
+        goto label1;
+
+     label0:
+        nop;
+        temp$1 = <com.example.smssenderOrig.MainActivity: java.lang.Class class$com$example$smssenderOrig$DisplayMessageActivity>;
+
+     label1:
+        nop;
+        specialinvoke temp$0.<android.content.Intent: void <init>(android.content.Context,java.lang.Class)>(this, temp$1);
+        intent = temp$0;
+        temp$4 = virtualinvoke this.<com.example.smssenderOrig.MainActivity: android.view.View findViewById(int)>(2131230720);
+        editText = (android.widget.EditText) temp$4;
+        temp$5 = virtualinvoke editText.<android.widget.EditText: android.text.Editable getText()>();
+        temp$6 = interfaceinvoke temp$5.<android.text.Editable: java.lang.String toString()>();
+        message = temp$6;
+        temp$7 = virtualinvoke intent.<android.content.Intent: android.content.Intent putExtra(java.lang.String,java.lang.String)>("com.example.smssenderOrig.MESSAGE", message);
+        virtualinvoke this.<com.example.smssenderOrig.MainActivity: void startActivity(android.content.Intent)>(intent);
+        return;
+    }
+
+    public void <init>()
+    {
+        com.example.smssenderOrig.MainActivity this;
+
+        this := @this: com.example.smssenderOrig.MainActivity;
+        specialinvoke this.<android.app.Activity: void <init>()>();
+        return;
+    }
+
+    public static java.lang.Class class$(java.lang.String)
+    {
+        java.lang.String name, temp$2;
+        java.lang.Class temp$0;
+        java.lang.ClassNotFoundException e;
+        java.lang.NoClassDefFoundError temp$1;
+
+        name := @parameter0: java.lang.String;
+
+     label0:
+        nop;
+        temp$0 = staticinvoke <java.lang.Class: java.lang.Class forName(java.lang.String)>(name);
+
+     label1:
+        nop;
+        return temp$0;
+
+     label2:
+        nop;
+        e := @caughtexception;
+        temp$1 = new java.lang.NoClassDefFoundError;
+        temp$2 = virtualinvoke e.<java.lang.ClassNotFoundException: java.lang.String getMessage()>();
+        specialinvoke temp$1.<java.lang.NoClassDefFoundError: void <init>(java.lang.String)>(temp$2);
+        throw temp$1;
+
+        catch java.lang.ClassNotFoundException from label0 to label1 with label2;
+    }
+}

@@ -1,0 +1,71 @@
+UNIQUE_IDENTIFIER:
+<android.telephony.TelephonyManager: java.lang.String getDeviceId()> (UNIQUE_IDENTIFIER)
+<android.telephony.TelephonyManager: java.lang.String getSubscriberId()> (UNIQUE_IDENTIFIER)
+<android.telephony.TelephonyManager: java.lang.String getSimSerialNumber()> (UNIQUE_IDENTIFIER)
+<android.telephony.TelephonyManager: java.lang.String getLine1Number()> (UNIQUE_IDENTIFIER)
+
+LOCATION_INFORMATION:
+<android.location.Location: double getLatitude()> (LOCATION_INFORMATION)
+<android.location.Location: double getLongitude()> (LOCATION_INFORMATION)
+
+FILE_INFORMATION:
+<java.net.URLConnection: java.io.OutputStream getOutputStream()> (FILE_INFORMATION)
+<java.net.URLConnection: java.io.InputStream getInputStream()> (FILE_INFORMATION)
+
+NETWORK_INFORMATION:
+<org.apache.http.HttpResponse: org.apache.http.HttpEntity getEntity()> (NETWORK_INFORMATION)
+<org.apache.http.util.EntityUtils: java.lang.String toString(org.apache.http.HttpEntity)> (NETWORK_INFORMATION)
+<org.apache.http.util.EntityUtils: java.lang.String toString(org.apache.http.HttpEntity,java.lang.String)> (NETWORK_INFORMATION)
+<org.apache.http.util.EntityUtils: byte[] toByteArray(org.apache.http.HttpEntity)> (NETWORK_INFORMATION)
+<org.apache.http.util.EntityUtils: java.lang.String getContentCharSet(org.apache.http.HttpEntity)> (NETWORK_INFORMATION)
+<android.net.wifi.WifiInfo: java.lang.String: getMacAddress()> (NETWORK_INFORMATION)
+<android.net.wifi.WifiInfo: java.lang.String getSSID()> (NETWORK_INFORMATION)
+<android.telephony.gsm.GsmCellLocation: int getCid()> (NETWORK_INFORMATION)
+<android.telephony.gsm.GsmCellLocation: int getLac()> (NETWORK_INFORMATION)
+<android.location.Location: double getLongitude()> (NETWORK_INFORMATION)
+<android.location.Location: double getLatitude()> (NETWORK_INFORMATION)
+<android.net.nsd.NsdServiceInfo: int getPort()> (NETWORK_INFORMATION)
+<android.net.ConnectivityManager: android.net.NetworkInfo[] getAllNetworkInfo()> (NETWORK_INFORMATION) 
+
+AUDIO:
+<android.media.AudioRecord: int read(short[],int,int)> (AUDIO)
+<android.media.AudioRecord: int read(byte[],int,int)> (AUDIO)
+<android.media.AudioRecord: int read(java.nio.ByteBuffer,int)> (AUDIO)
+
+LOCATION_INFORMATION:
+<android.location.LocationManager: android.location.Location getLastKnownLocation(java.lang.String)> (LOCATION_INFORMATION)
+<java.util.Locale: java.lang.String getCountry()> (LOCATION_INFORMATION)
+<java.util.Calendar: java.util.TimeZone getTimeZone()> (LOCATION_INFORMATION)
+
+PHONE_INFORMATION:
+<android.content.pm.PackageManager: java.util.List getInstalledApplications(int)> (PHONE_INFORMATION)
+<android.content.pm.PackageManager: java.util.List getInstalledPackages(int)> (PHONE_INFORMATION)
+<android.content.pm.PackageManager: java.util.List queryIntentActivities(android.content.Intent,int)> (PHONE_INFORMATION)
+<android.content.pm.PackageManager: java.util.List queryIntentServices(android.content.Intent,int)> (PHONE_INFORMATION)
+<android.content.pm.PackageManager: java.util.List queryBroadcastReceivers(android.content.Intent,int)> (PHONE_INFORMATION)
+<android.content.pm.PackageManager: java.util.List queryContentProviders(java.lang.String,int,int)> (PHONE_INFORMATION)
+
+SMS_MMS:
+<android.os.Handler: android.os.Message obtainMessage()> (SMS_MMS)
+<android.os.Handler: android.os.Message obtainMessage(int,int,int)> (SMS_MMS)
+<android.os.Handler: android.os.Message obtainMessage(int,int,int,java.lang.Object)> (SMS_MMS)
+<android.os.Handler: android.os.Message obtainMessage(int)> (SMS_MMS)
+<android.os.Handler: android.os.Message obtainMessage(int,java.lang.Object)> (SMS_MMS)
+
+BLUETOOTH_INFORMATION:
+<android.bluetooth.BluetoothAdapter: java.lang.String getAddress()> (BLUETOOTH_INFORMATION)
+
+ACCOUNT_INFORMATION:
+<android.accounts.AccountManager: android.accounts.Account[] getAccounts()> (ACCOUNT_INFORMATION)
+
+BROWSER_INFORMATION:
+<android.provider.Browser: android.database.Cursor getAllBookmarks()> (BROWSER_INFORMATION)
+<android.provider.Browser: android.database.Cursor getAllVisitedUrls()> (BROWSER_INFORMATION)
+<java.net.URL: java.net.URLConnection openConnection()> (BROWSER_INFORMATION)
+
+DATABASE_INFORMATION:
+<android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String)> (DATABASE_INFORMATION)
+<android.content.ContentResolver: android.database.Cursor query(android.net.Uri,java.lang.String[],java.lang.String,java.lang.String[],java.lang.String,android.os.CancellationSignal)> (DATABASE_INFORMATION)
+
+INTER_APP_COMMUNICATION:
+<android.content.Intent: android.os.Bundle getExtras()> (INTER_APP_COMMUNICATION)

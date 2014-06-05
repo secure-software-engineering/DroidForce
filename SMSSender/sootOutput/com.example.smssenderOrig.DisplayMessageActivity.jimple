@@ -1,0 +1,71 @@
+public class com.example.smssenderOrig.DisplayMessageActivity extends android.app.Activity
+{
+
+    protected void onCreate(android.os.Bundle)
+    {
+        com.example.smssenderOrig.DisplayMessageActivity this;
+        android.os.Bundle savedInstanceState;
+        android.content.Intent intent, temp$0;
+        java.lang.String message, temp$1;
+        android.widget.TextView textView, temp$2;
+
+        this := @this: com.example.smssenderOrig.DisplayMessageActivity;
+        savedInstanceState := @parameter0: android.os.Bundle;
+        specialinvoke this.<android.app.Activity: void onCreate(android.os.Bundle)>(savedInstanceState);
+        temp$0 = virtualinvoke this.<com.example.smssenderOrig.DisplayMessageActivity: android.content.Intent getIntent()>();
+        intent = temp$0;
+        temp$1 = virtualinvoke intent.<android.content.Intent: java.lang.String getStringExtra(java.lang.String)>("com.example.smssenderOrig.MESSAGE");
+        message = temp$1;
+        temp$2 = new android.widget.TextView;
+        specialinvoke temp$2.<android.widget.TextView: void <init>(android.content.Context)>(this);
+        textView = temp$2;
+        virtualinvoke textView.<android.widget.TextView: void setTextSize(float)>(40.0F);
+        virtualinvoke textView.<android.widget.TextView: void setText(java.lang.CharSequence)>(message);
+        virtualinvoke this.<com.example.smssenderOrig.DisplayMessageActivity: void setContentView(android.view.View)>(textView);
+        return;
+    }
+
+    public boolean onOptionsItemSelected(android.view.MenuItem)
+    {
+        com.example.smssenderOrig.DisplayMessageActivity this;
+        android.view.MenuItem item;
+        boolean temp$0, temp$2;
+        int temp$1;
+
+        this := @this: com.example.smssenderOrig.DisplayMessageActivity;
+        item := @parameter0: android.view.MenuItem;
+        goto label1;
+
+     label0:
+        nop;
+        staticinvoke <android.support.v4.app.NavUtils: void navigateUpFromSameTask(android.app.Activity)>(this);
+        temp$0 = 1;
+        return temp$0;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$1 = interfaceinvoke item.<android.view.MenuItem: int getItemId()>();
+        nop;
+        lookupswitch(temp$1)
+        {
+            case 16908332: goto label0;
+            default: goto label2;
+        };
+
+     label2:
+        nop;
+        temp$2 = specialinvoke this.<android.app.Activity: boolean onOptionsItemSelected(android.view.MenuItem)>(item);
+        return temp$2;
+    }
+
+    public void <init>()
+    {
+        com.example.smssenderOrig.DisplayMessageActivity this;
+
+        this := @this: com.example.smssenderOrig.DisplayMessageActivity;
+        specialinvoke this.<android.app.Activity: void <init>()>();
+        return;
+    }
+}
