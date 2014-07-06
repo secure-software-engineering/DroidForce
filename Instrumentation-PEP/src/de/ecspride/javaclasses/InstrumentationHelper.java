@@ -35,8 +35,8 @@ public class InstrumentationHelper {
 	private static void setupBindService(Context context){
 		Log.i("PEP", "in InstrumentationHelper.setupBindService");
 		Intent intent=new Intent();
-	    intent.setClassName("de.fraunhofer.iese.apppdp", "de.fraunhofer.iese.apppdp.pdpService");
-	    intent.setAction("de.fraunhofer.iese.apppdp.pdpService");
+	    intent.setClassName("de.tum.in.i22.uc.pdp.android", "de.tum.in.i22.uc.pdp.android.pdpService");
+	    intent.setAction("de.tum.in.i22.uc.pdp.android.pdpService");
 	    context.bindService(intent, connection, Context.BIND_AUTO_CREATE);
 	}
 	

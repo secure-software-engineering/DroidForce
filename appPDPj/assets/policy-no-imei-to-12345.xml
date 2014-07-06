@@ -1,0 +1,37 @@
+<?xml version='1.0' standalone='yes'?>
+<policySet xmlns:tns="http://www.iese.fhg.de/pef/1.0/enforcementLanguage"
+    xmlns:a="http://www.iese.fhg.de/pef/1.0/action"
+    xmlns:e="http://www.iese.fhg.de/pef/1.0/event"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="http://www.iese.fhg.de/pef/1.0/enforcementLanguage" >
+
+    <interfaceDescriptions />
+    <actionDescriptions>
+        <actionDescription
+            name="sentTextMessage"
+            pep="pep1" />
+    </actionDescriptions>
+    <preventiveMechanism name="test" >
+        <description>
+IMEI should not be sent to 12345        </description>
+        <timestep
+            amount="3"
+            unit="SECONDS" />
+        <trigger
+            action="sentTextMessage"
+            isTry="true" >
+            <paramMatch
+                name="destination"
+                value="12345" />
+             <paramMatch
+                name="DATA_UNIQUE_IDENTIFIER"
+                value="true" />
+        </trigger>
+        <condition>
+			<true/>
+        </condition>
+        <authorizationAction name="default" >
+            <inhibit />
+        </authorizationAction>
+    </preventiveMechanism>
+</policySet>

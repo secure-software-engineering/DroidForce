@@ -1,0 +1,10 @@
+<resources>
+
+    <string name="app_name">appPDP</string>
+    <string name="hello_world">Hello world!\n</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_main">appPDP</string>
+    <string name="buttonDeploy">Deploy example policy</string>
+    <string name="buttonNotify">NotifyEvent</string>
+
+</resources>
