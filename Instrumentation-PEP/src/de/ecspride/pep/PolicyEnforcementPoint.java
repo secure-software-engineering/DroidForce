@@ -109,9 +109,6 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		for(SootClass sc : Scene.v().getApplicationClasses()){
 			for(SootMethod sm : sc.getMethods()){
 				if(sm.isConcrete()){
-					if(sm.getSignature().equals("<com.kuguo.pushads.n: java.lang.String a(android.content.Context)>"))
-						System.out.println();
-					
 					Body body = sm.retrieveActiveBody();
 					//is instrumentation necessary
 					if(isInstrumentationNecessary(sm)){

@@ -8,7 +8,7 @@
     
     name="bliblablub">
 
-    <preventiveMechanism name="test" >
+    <preventiveMechanism name="test2" >
         <description>New Policy</description>
         <timestep amount="3" unit="SECONDS" />
         <trigger action="sentTextMessage" tryEvent="true" >
