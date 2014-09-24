@@ -63,16 +63,6 @@ public class Main {
 		System.out.println("xxxxxxxxxTime dynamic part: " + (System.currentTimeMillis() - startTime));
 	}
 	
-	private static void writeJimpleOutput() {
-		// has to go over it again (also in internalTransform), because one
-		// class can modify another class
-		for (SootClass c : Scene.v().getApplicationClasses()) {
-			if (!Util.isAndroidClass(c)) {
-				Util.writeJimpleFiles(c);
-			}
-		}
-	}
-	
 	private static void runFlowDroid(SetupApplication setupApp, Map<String, EventInformation> eventInformation){
 		ITaintPropagationWrapper taintWrapper = null;
 		try{
@@ -109,8 +99,6 @@ public class Main {
 				if (sm.hasActiveBody())
 					sm.getActiveBody().validate();
 		PackManager.v().writeOutput();
-		
-//		writeJimpleOutput();
 	}
 
 }

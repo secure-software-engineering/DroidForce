@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.Collections;
 
 import soot.Scene;
-import soot.SootClass;
 import soot.jimple.infoflow.config.IInfoflowConfig;
 import soot.options.Options;
 import de.ecspride.Settings;

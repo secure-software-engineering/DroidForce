@@ -1,0 +1,4 @@
+soot.jar=soot-trunk.jar
+soot-infoflow.jar=soot-infoflow.jar
+soot-infoflow-android.jar=soot-infoflow-android.jar
+android.jar=/opt/android-platforms/android-19/android.jar
