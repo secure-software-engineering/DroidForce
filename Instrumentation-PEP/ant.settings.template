@@ -2,3 +2,5 @@ soot.jar=
 soot-infoflow.jar=
 soot-infoflow-android.jar=
 android.jar=
+
+droidforce.jar=build/jar/DroidForce.jar

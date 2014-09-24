@@ -2,3 +2,5 @@ soot.jar=libs/soot-trunk.jar
 soot-infoflow.jar=libs/soot-infoflow.jar
 soot-infoflow-android.jar=libs/soot-infoflow-android.jar
 android.jar=/opt/android-platforms/android-19/android.jar
+
+droidforce.jar=build/jar/DroidForce.jar
