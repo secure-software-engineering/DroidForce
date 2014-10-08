@@ -88,8 +88,7 @@ public class Main {
 		setupApp.setEnableStaticFieldTracking(false);
 		setupApp.setFlowSensitiveAliasing(false);
 		setupApp.setAccessPathLength(1);
-		setupApp.setComputeResultPaths(false);
-
+		
 		PolicyEnforcementPoint pep = new PolicyEnforcementPoint(eventInformation, setupApp.getSources(), setupApp.getSinks(), setupApp.getEntryPointCreator());
 		setupApp.runInfoflow(pep); 
 		
