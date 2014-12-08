@@ -48,13 +48,13 @@ import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
 import soot.jimple.Stmt;
 import soot.jimple.StringConstant;
-import soot.jimple.infoflow.InfoflowResults;
-import soot.jimple.infoflow.InfoflowResults.SinkInfo;
-import soot.jimple.infoflow.InfoflowResults.SourceInfo;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.android.data.AndroidMethod.CATEGORY;
 import soot.jimple.infoflow.entryPointCreators.AndroidEntryPointCreator;
 import soot.jimple.infoflow.handlers.ResultsAvailableHandler;
+import soot.jimple.infoflow.results.InfoflowResults;
+import soot.jimple.infoflow.results.ResultSinkInfo;
+import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
 import de.ecspride.Main;
@@ -117,68 +117,29 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						Iterator<Unit> i = body.getUnits().snapshotIterator();						
 						
 						while(i.hasNext()){
-							Unit unit = i.next();	
+							Stmt s = (Stmt) i.next();
 							
-							if(unit instanceof DefinitionStmt){
-								DefinitionStmt defStmt = (DefinitionStmt)unit;
-								if(defStmt.containsInvokeExpr()){									
-									InvokeExpr invExpr = defStmt.getInvokeExpr();
-									String methodSignature = invExpr.getMethod().getSignature();
-									if(allEventInformation.containsKey(methodSignature)){
-										
-										boolean instrumentWithDataFlow = false;
-										
-										Value sink = null;
-										for(Map.Entry<SinkInfo, Set<SourceInfo>> result : results.getResults().entrySet()){
-											sink = result.getKey().getSink();
-											
-											if(invExpr.equals(sink)){
-												instrumentWithDataFlow = true;
-												break;
-											}
-										}
-										
-										
-										if(instrumentWithDataFlow){
-											instrumentWithNoDataFlowInformation(methodSignature, unit, invExpr, body, true);
-											instrumentSourceToSinkConnections(cfg, sink, true);
-										}
-										else
-											instrumentWithNoDataFlowInformation(methodSignature, unit, invExpr, body, true);
-									}
-								}
-							}
-							else if(unit instanceof InvokeStmt){
-								InvokeStmt invStmt = (InvokeStmt)unit;
-								InvokeExpr invExpr = invStmt.getInvokeExpr();
-								
+							if(s.containsInvokeExpr()) {
+								InvokeExpr invExpr = s.getInvokeExpr();
 								String methodSignature = invExpr.getMethod().getSignature();
 								if(allEventInformation.containsKey(methodSignature)){
-									
-									boolean instrumentWithDataFlow = false;
-									
-									Value sink = null;
-									for(Map.Entry<SinkInfo, Set<SourceInfo>> result : results.getResults().entrySet()){
-										sink = result.getKey().getSink();
-										
-										if(invExpr.equals(sink)){
-											instrumentWithDataFlow = true;
-											break;
+									ResultSinkInfo sink = null;
+									outer : for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
+										for (Value v : invExpr.getArgs())
+											if (v == result.getKey().getAccessPath().getPlainValue()) {
+												sink = result.getKey();
+												break outer;
 										}
 									}
-														
-									
-									
-									if(instrumentWithDataFlow){
-										instrumentWithNoDataFlowInformation(methodSignature, unit, invExpr, body, false);
-										instrumentSourceToSinkConnections(cfg, sink, false);
+																			
+									if(sink != null){
+										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, true);
+										instrumentSourceToSinkConnections(cfg, sink, true);
 									}
 									else
-										instrumentWithNoDataFlowInformation(methodSignature, unit, invExpr, body, false);
+										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, true);
 								}
 							}
-							
-
 						}
 					}
 				}
@@ -186,7 +147,8 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		}
 	}
 	
-	private List<Unit> instrumentIntentAddings(BiDiInterproceduralCFG<Unit, SootMethod> cfg, Unit unit, InvokeExpr sinkExpr, Set<SourceInfo> sourceInfo){
+	private List<Unit> instrumentIntentAddings(BiDiInterproceduralCFG<Unit, SootMethod> cfg,
+			Unit unit, InvokeExpr sinkExpr, Set<ResultSourceInfo> sourceInfo){
 		if(isMethodInterComponentSink(sinkExpr.getMethod())){
 			SootMethod method = cfg.getMethodOf(unit);
 			Body body = null;
@@ -230,13 +192,13 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		return Collections.emptyList();
 	}
 	
-	private void instrumentSourceToSinkConnections(BiDiInterproceduralCFG<Unit, SootMethod> cfg, Value sink, boolean assignmentStatement){
+	private void instrumentSourceToSinkConnections(BiDiInterproceduralCFG<Unit, SootMethod> cfg, ResultSinkInfo sink, boolean assignmentStatement){
 		sourceSinkConnectionCounter += 1;
 		
-		for(Map.Entry<SinkInfo, Set<SourceInfo>> result : results.getResults().entrySet()){
+		for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
 			if(result.getKey().getSink().equals(sink)){
-				for(SourceInfo si : result.getValue()){
-					Stmt stmt = si.getContext();
+				for(ResultSourceInfo si : result.getValue()){
+					Stmt stmt = si.getSource();
 					SootMethod sm = cfg.getMethodOf(stmt);
 					Body body = sm.retrieveActiveBody();
 					
@@ -284,20 +246,21 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 					}
 					
 					//sink instrumentation
-					if(sink instanceof InvokeExpr){	
-						Body bodyOfSink = cfg.getMethodOf(result.getKey().getContext()).getActiveBody();
-						InvokeExpr invExpr = (InvokeExpr)sink;
+					if(sink.getSink().containsInvokeExpr()){	
+						Body bodyOfSink = cfg.getMethodOf(result.getKey().getSink()).getActiveBody();
+						InvokeExpr invExpr = sink.getSink().getInvokeExpr();
 						List<Unit> generated = new ArrayList<Unit>();
 						generated.addAll(instrumentIntentAddings(cfg, stmt, invExpr, result.getValue()));
 						
 						EventInformation eventInfo = allEventInformation.get(invExpr.getMethod().getSignature());
 						
-						generated.addAll(generatePolicyEnforcementPoint(result.getKey().getContext(), invExpr, bodyOfSink, sourceSinkConnectionCounter, assignmentStatement));
+						generated.addAll(generatePolicyEnforcementPoint(result.getKey().getSink(), invExpr,
+								bodyOfSink, sourceSinkConnectionCounter, assignmentStatement));
 						
 						if(eventInfo.isInstrumentAfterStatement())
-							bodyOfSink.getUnits().insertAfter(generated, result.getKey().getContext());
+							bodyOfSink.getUnits().insertAfter(generated, result.getKey().getSink());
 						else
-							bodyOfSink.getUnits().insertBefore(generated, result.getKey().getContext());
+							bodyOfSink.getUnits().insertBefore(generated, result.getKey().getSink());
 					}
 					else
 						throw new RuntimeException("Double-Check the assumption");
@@ -557,20 +520,18 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	 * @param sourcesInfo: all possible sources from which we try to identify the category
 	 * @return: set of categories for specific sink
 	 */
-	private Set<String> getDataIdList(Set<SourceInfo> sourcesInfo){
+	private Set<String> getDataIdList(Set<ResultSourceInfo> sourcesInfo){
 		Set<String> dataIdList = new HashSet<String>();
-		for(SourceInfo sInfo : sourcesInfo){
-			Value source = sInfo.getSource();
-			
-			if(source instanceof InvokeExpr){
-				InvokeExpr invExpr = (InvokeExpr)source;
-							
+		for(ResultSourceInfo sInfo : sourcesInfo){
+			if(sInfo.getSource().containsInvokeExpr()){
+				InvokeExpr invExpr = sInfo.getSource().getInvokeExpr();
+				
 				for(AndroidMethod am : sources)
 					if(am.getSignature().equals(invExpr.getMethod().getSignature())){
 							dataIdList.add(am.getCategory().toString());
 					}
 			}
-			else if(source instanceof ParameterRef){
+			else if (isSourceInfoParameter(sInfo)){
 				dataIdList.add(unknownCategory);
 			}
 			else
@@ -579,19 +540,23 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		
 		return dataIdList;
 	}
+
+
+	private boolean isSourceInfoParameter(ResultSourceInfo sInfo) {
+		return sInfo.getSource() instanceof IdentityStmt
+				&& ((IdentityStmt) sInfo.getSource()).getRightOp() instanceof ParameterRef;
+	}
 	
-	private String getSourceCategory(SourceInfo sourceInfo){
-		Value source = sourceInfo.getSource();
-		
-		if(source instanceof InvokeExpr){
-			InvokeExpr invExpr = (InvokeExpr)source;
+	private String getSourceCategory(ResultSourceInfo sourceInfo){
+		if(sourceInfo.getSource().containsInvokeExpr()){
+			InvokeExpr invExpr = sourceInfo.getSource().getInvokeExpr();
 						
 			for(AndroidMethod am : sources)
 				if(am.getSignature().equals(invExpr.getMethod().getSignature())){
 						return am.getCategory().toString();
 				}
 		}
-		else if(source instanceof ParameterRef){
+		else if(isSourceInfoParameter(sourceInfo)){
 			return unknownCategory;
 		}
 		else
@@ -611,47 +576,33 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		return false;
 	}
 	
-	private boolean isInterComponentSourceNoCallback(SourceInfo si, BiDiInterproceduralCFG<Unit, SootMethod> cfg){
-		Value source = si.getSource();
-		if(source instanceof Stmt){
-			Stmt stmt = (Stmt)source;
-			if(stmt.containsInvokeExpr()){				
-				InvokeExpr invExpr = stmt.getInvokeExpr();
-				SootMethod sm = invExpr.getMethod();
+	private boolean isInterComponentSourceNoCallback(ResultSourceInfo si, BiDiInterproceduralCFG<Unit, SootMethod> cfg){
+		if(!si.getSource().containsInvokeExpr())
+			return false;
+		
+		InvokeExpr invExpr = si.getSource().getInvokeExpr();
+		SootMethod sm = invExpr.getMethod();
 				
-				for(AndroidMethod am : sources){
-					if(am.getCategory() == CATEGORY.INTER_APP_COMMUNICATION){
-						if(am.getSubSignature().equals(sm.getSubSignature()))
-							return true;
-					}
-				}
+		for(AndroidMethod am : sources){
+			if(am.getCategory() == CATEGORY.INTER_APP_COMMUNICATION){
+				if(am.getSubSignature().equals(sm.getSubSignature()))
+					return true;
 			}
 		}
-		else if(source instanceof InvokeExpr){
-			SootMethod sm = ((InvokeExpr)source).getMethod();
-			
-			for(AndroidMethod am : sources){
-				if(am.getCategory() == CATEGORY.INTER_APP_COMMUNICATION){
-					if(am.getSubSignature().equals(sm.getSubSignature()))
-						return true;
-				}
-			}
-		}		
 		
 		return false;
 	}
 	
-	private boolean isInterComponentSourceCallback(SourceInfo si, BiDiInterproceduralCFG<Unit, SootMethod> cfg){
-		Value source = si.getSource();
-		if(source instanceof ParameterRef){
-			SootMethod sm = cfg.getMethodOf(si.getContext());
+	private boolean isInterComponentSourceCallback(ResultSourceInfo si,
+			BiDiInterproceduralCFG<Unit, SootMethod> cfg){
+		if(isSourceInfoParameter(si)){
+			SootMethod sm = cfg.getMethodOf(si.getSource());
 			
 			if(entryPointCreator.getCallbackFunctions().containsKey(sm.getDeclaringClass())){
 				if(entryPointCreator.getCallbackFunctions().get(sm.getDeclaringClass()).contains(sm.getSignature()))
 					return true;
 			}
 		}
-		
 		
 		return false;
 	}
