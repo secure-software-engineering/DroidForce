@@ -132,9 +132,9 @@ public class Settings {
 					+ "-apkFile </path/to/file.apk> \n"
 					+ "-androidPlatforms </path/to/root/folder/of/jars> (e.g., AndroidSDK for /AndroidSDK/android-3/android.jar, /AndroidSDK/android-4/android.jar, ...)\n"
 					+ "-androidJar </path/to/android.jar>\n"
-					+ "-instrumentationType [hybrid|complete]\n"
+					/* + "-instrumentationType [hybrid|complete]\n" */
 					+ "-taintWrapper </path/to/taintWrapper.txt>\n"
-					+ "-jimpleOutput [true|false]");
+					/* + "-jimpleOutput [true|false]" */ );
 			System.out.println(output.toString());
 		}
 		
@@ -176,6 +176,7 @@ public class Settings {
 					apkFile = args[i];	
 				}
 				else{
+					System.err.println("unknown option '"+ args[i] +"'");
 					printHelp();
 					System.exit(0);
 				}
