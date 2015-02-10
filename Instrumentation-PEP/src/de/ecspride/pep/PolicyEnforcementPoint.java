@@ -133,11 +133,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 									}
 																			
 									if(sink != null){
-										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, true);
-										instrumentSourceToSinkConnections(cfg, sink, true);
+										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
+										instrumentSourceToSinkConnections(cfg, sink, s instanceof AssignStmt);
 									}
 									else
-										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, true);
+										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
 								}
 							}
 						}
@@ -344,7 +344,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 				generated.add(ifStmt);
 			}
 			else
-				throw new RuntimeException("Oops, there is something wrong now!");
+				throw new RuntimeException("error: expected DefinitionStmt got "+ unit +" -> "+ unit.getClass());
 		}
 		else{
 			//condition check for pep - true case
