@@ -140,7 +140,7 @@ public class Util {
 			
 			Unit onCreateSpecialInvoke = getUnitAfterSuperOnCreate(body);
 			if(onCreateSpecialInvoke == null)
-				throw new RuntimeException("Oops, something went all wonky");
+				throw new RuntimeException("error: super.onCreate() statement missing in method "+ onCreate);
 			
 			body.getUnits().insertAfter(generated, onCreateSpecialInvoke);
 		}
