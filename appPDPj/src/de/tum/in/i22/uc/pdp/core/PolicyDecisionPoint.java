@@ -1,11 +1,8 @@
 package de.tum.in.i22.uc.pdp.core;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -114,6 +111,19 @@ public class PolicyDecisionPoint implements IPolicyDecisionPoint, Serializable
     if(inp == null) return false;
     try
     {
+    	// SA, 11.02.2015: The following line leads to code that will throw and catch a
+    	// NullPointerException. Just ignore that.
+    	//
+    	//     try
+    	//        {
+    	//            XmlSchema s = null;
+    	//            s.location();
+    	//          }
+    	//          catch (NullPointerException e) {}catch (NoSuchMethodError e)
+    	//          {
+    	//    		  ...
+    	//    		}
+    	//
       JAXBContext jc=JAXBContext.newInstance("de.tum.in.i22.uc.pdp.xsd");
       Unmarshaller u=jc.createUnmarshaller();
 //      u.setSchema(null);
@@ -272,22 +282,6 @@ public class PolicyDecisionPoint implements IPolicyDecisionPoint, Serializable
     }
 
     return map;
-  }
-
-  private String readFile(String file) throws IOException
-  {
-    BufferedReader reader=new BufferedReader(new FileReader(file));
-    String line=null;
-    StringBuilder stringBuilder=new StringBuilder();
-    String ls=System.getProperty("line.separator");
-
-    while((line=reader.readLine()) != null)
-    {
-      stringBuilder.append(line);
-      stringBuilder.append(ls);
-    }
-    reader.close();
-    return stringBuilder.toString();
   }
 
   @Override

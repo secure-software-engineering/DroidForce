@@ -18,11 +18,4 @@
         android:onClick="deployPolicy"
         android:text="@string/buttonDeploy" />
 
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:onClick="notifyEvent"
-        android:text="@string/buttonNotify" />
-
 </LinearLayout>
