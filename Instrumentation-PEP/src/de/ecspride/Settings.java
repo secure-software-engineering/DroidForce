@@ -134,6 +134,7 @@ public class Settings {
 					+ "-androidJar </path/to/android.jar>\n"
 					/* + "-instrumentationType [hybrid|complete]\n" */
 					+ "-taintWrapper </path/to/taintWrapper.txt>\n"
+					+ "-d enable debug"
 					/* + "-jimpleOutput [true|false]" */ );
 			System.out.println(output.toString());
 		}
@@ -174,6 +175,9 @@ public class Settings {
 					++i;
 					correctArgumentCheck(args[i]);
 					apkFile = args[i];	
+				}
+				else if(args[i].equals("-d")) {
+					Debug.v().enable();
 				}
 				else{
 					System.err.println("unknown option '"+ args[i] +"'");

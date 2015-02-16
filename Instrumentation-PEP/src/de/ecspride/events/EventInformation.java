@@ -36,4 +36,14 @@ public class EventInformation {
 	public String getEventName() {
 		return eventName;
 	}
+	
+	public String toString() {
+		String s = "";
+		s += "name: "+ eventName +"\n";
+		s += "instrument after statement: "+ instrumentAfterStatement +"\n";
+		for (Pair<Integer,String> p: parameterInformation) {
+			s += "  " + p.getLeft() +" "+p.getRight() +"\n";
+		}
+		return s;
+	}
 }

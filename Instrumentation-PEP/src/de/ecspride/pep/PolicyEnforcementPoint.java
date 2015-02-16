@@ -57,6 +57,7 @@ import soot.jimple.infoflow.results.ResultSinkInfo;
 import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
+import de.ecspride.Debug;
 import de.ecspride.Main;
 import de.ecspride.Settings;
 import de.ecspride.events.EventInformation;
@@ -115,7 +116,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 					
 						//important to use snapshotIterator here
 						Iterator<Unit> i = body.getUnits().snapshotIterator();						
-						
+						Debug.v().println("method: "+ sm);
 						while(i.hasNext()){
 							Stmt s = (Stmt) i.next();
 							
@@ -125,6 +126,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 								if(allEventInformation.containsKey(methodSignature)){
 									ResultSinkInfo sink = null;
 									outer : for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
+										if (Debug.v().isEnabled()) {
+											System.out.println("result at " + s + ": k = "+ result.getKey());
+											for (ResultSourceInfo rsi: result.getValue())
+												System.out.println("  ---> "+ rsi);
+										}
 										for (Value v : invExpr.getArgs())
 											if (v == result.getKey().getAccessPath().getPlainValue()) {
 												sink = result.getKey();
@@ -196,7 +202,9 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		sourceSinkConnectionCounter += 1;
 		
 		for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
-			if(result.getKey().getSink().equals(sink)){
+			Debug.v().println("compare: "+ result.getKey());
+			Debug.v().println("     to: "+ sink);
+			if(result.getKey().equals(sink)){
 				for(ResultSourceInfo si : result.getValue()){
 					Stmt stmt = si.getSource();
 					SootMethod sm = cfg.getMethodOf(stmt);
@@ -287,6 +295,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	
 	
 	private List<Unit> generatePolicyEnforcementPoint(Unit unit, InvokeExpr invExpr, Body body, int dataFlowAvailable, boolean assignmentStatement){
+		Debug.v().println("dataflow available: "+ dataFlowAvailable);
 		List<Unit> generated = new ArrayList<Unit>();
 		String methodSignature = invExpr.getMethod().getSignature();
 		EventInformation eventInfo = allEventInformation.get(methodSignature);

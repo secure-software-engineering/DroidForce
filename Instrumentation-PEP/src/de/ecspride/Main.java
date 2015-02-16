@@ -40,6 +40,14 @@ public class Main {
 		//events we will cover
 		EventInformationParser eventInfoParser = new EventInformationParser();
 		Map<String, EventInformation> eventInformation = eventInfoParser.parseEventInformation();
+		if (Debug.v().isEnabled()) {
+			for (String k: eventInformation.keySet()) {
+				System.out.println("");
+				System.out.println("Event: "+ k);
+				System.out.println(eventInformation.get(k));
+				
+			}
+		}
 		
 		SourcesSinks sourcesSinks = new SourcesSinks();
 		//get Android sources
