@@ -176,9 +176,6 @@ public class Settings {
 					correctArgumentCheck(args[i]);
 					apkFile = args[i];	
 				}
-				else if(args[i].equals("-d")) {
-					Debug.v().enable();
-				}
 				else{
 					System.err.println("unknown option '"+ args[i] +"'");
 					printHelp();

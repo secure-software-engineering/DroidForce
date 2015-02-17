@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import soot.ArrayType;
 import soot.Body;
 import soot.BooleanType;
@@ -57,7 +60,6 @@ import soot.jimple.infoflow.results.ResultSinkInfo;
 import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
-import de.ecspride.Debug;
 import de.ecspride.Main;
 import de.ecspride.Settings;
 import de.ecspride.events.EventInformation;
@@ -72,6 +74,7 @@ import de.ecspride.util.Util;
  * @author Siegfried Rasthofer
  */
 public class PolicyEnforcementPoint implements ResultsAvailableHandler{
+	private static Logger log = LoggerFactory.getLogger(PolicyEnforcementPoint.class);
 	/**
 	 * key: method-signature indicating the statement which needs some instrumentation
 	 * value: event-information about the event which will be triggered at the method-signature  
@@ -95,15 +98,17 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	
 	@Override
 	public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
-		System.out.println("xxxxxxxxxTime for static part: " + (System.currentTimeMillis() - Main.startTime));
+		log.info("FlowDroid has finished. Duration: " + (System.currentTimeMillis() - Main.startTime) +" ms.");
 		Main.startTime = System.currentTimeMillis();
 		Settings.instance.setDummyMainToLibraryClass();
 		this.results = results;
 		
+		log.info("Starting bytecode instrumentation.");
 		//first instrument some statements which initializes the PEP
 		Util.initializePePInAllPossibleClasses(Settings.instance.getApkPath());
 		
 		doAccessControlChecks(cfg);
+		log.info("Instrumentation is done.");
 	}
 	
 	private void doAccessControlChecks(BiDiInterproceduralCFG<Unit, SootMethod> cfg){
@@ -116,7 +121,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 					
 						//important to use snapshotIterator here
 						Iterator<Unit> i = body.getUnits().snapshotIterator();						
-						Debug.v().println("method: "+ sm);
+						log.debug("method: "+ sm);
 						while(i.hasNext()){
 							Stmt s = (Stmt) i.next();
 							
@@ -126,10 +131,10 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 								if(allEventInformation.containsKey(methodSignature)){
 									ResultSinkInfo sink = null;
 									outer : for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
-										if (Debug.v().isEnabled()) {
-											System.out.println("result at " + s + ": k = "+ result.getKey());
+										if (log.isDebugEnabled()) {
+											log.debug("result at " + s + ": k = "+ result.getKey());
 											for (ResultSourceInfo rsi: result.getValue())
-												System.out.println("  ---> "+ rsi);
+												log.debug("  ---> "+ rsi);
 										}
 										for (Value v : invExpr.getArgs())
 											if (v == result.getKey().getAccessPath().getPlainValue()) {
@@ -202,8 +207,8 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		sourceSinkConnectionCounter += 1;
 		
 		for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
-			Debug.v().println("compare: "+ result.getKey());
-			Debug.v().println("     to: "+ sink);
+			log.debug("compare: "+ result.getKey());
+			log.debug("     to: "+ sink);
 			if(result.getKey().equals(sink)){
 				for(ResultSourceInfo si : result.getValue()){
 					Stmt stmt = si.getSource();
@@ -295,7 +300,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	
 	
 	private List<Unit> generatePolicyEnforcementPoint(Unit unit, InvokeExpr invExpr, Body body, int dataFlowAvailable, boolean assignmentStatement){
-		Debug.v().println("dataflow available: "+ dataFlowAvailable);
+		log.debug("dataflow available: "+ dataFlowAvailable);
 		List<Unit> generated = new ArrayList<Unit>();
 		String methodSignature = invExpr.getMethod().getSignature();
 		EventInformation eventInfo = allEventInformation.get(methodSignature);
