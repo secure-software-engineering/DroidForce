@@ -8,6 +8,7 @@ import java.util.Set;
 
 
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,11 +56,13 @@ public class Main {
 		EventInformationParser eventInfoParser = new EventInformationParser();
 		Map<String, EventInformation> eventInformation = eventInfoParser.parseEventInformation();
 
-		log.debug("\n[ ] Event Information:");
-		for (String k: eventInformation.keySet()) {
+		if (log.isDebugEnabled()) {
+			log.debug("All Event Information:");
+			for (String k: eventInformation.keySet()) {
+				log.debug("event information for "+ k);
+				log.debug(""+ eventInformation.get(k));
+			}
 			log.debug("");
-			log.debug("Event: "+ k);
-			log.debug("", eventInformation.get(k));	
 		}
 		
 		SourcesSinks sourcesSinks = new SourcesSinks();

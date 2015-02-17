@@ -103,23 +103,49 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		Settings.instance.setDummyMainToLibraryClass();
 		this.results = results;
 		
+		if (log.isDebugEnabled()) {
+			log.debug("");
+			log.debug("InfoFlow Results");
+			Map<ResultSinkInfo, Set<ResultSourceInfo>> r = results.getResults();
+			for (ResultSinkInfo k : r.keySet()) {
+				log.debug("ResultSinkInfo: "+ k);
+
+				for (ResultSourceInfo rsi: r.get(k)) {
+					log.debug("  source: "+ rsi);
+				}
+			}
+			log.debug("");
+		}
+	
+	
 		log.info("Starting bytecode instrumentation.");
-		//first instrument some statements which initializes the PEP
+		
+		log.info("Adding code to initialize PEPs.");
 		Util.initializePePInAllPossibleClasses(Settings.instance.getApkPath());
 		
+		log.info("Adding Policy Enforcement Points (PEPs).");
 		doAccessControlChecks(cfg);
+		
 		log.info("Instrumentation is done.");
 	}
 	
+	/**
+	 * For a concrete method (declared in an application class), find statements 
+	 * containing an invoke expression for which the method is one of the method 
+	 * in 'allEventInformation' (i.e., getLine1Number(), ...).
+	 * 
+	 * @param cfg
+	 */
 	private void doAccessControlChecks(BiDiInterproceduralCFG<Unit, SootMethod> cfg){
 		for(SootClass sc : Scene.v().getApplicationClasses()){
 			for(SootMethod sm : sc.getMethods()){
 				if(sm.isConcrete()){
 					Body body = sm.retrieveActiveBody();
-					//is instrumentation necessary
+					// only instrument application methods (i.e., not methods declared in PEP helper classes
+					// or in a Java library classes or in an Android classes, ...)
 					if(isInstrumentationNecessary(sm)){
 					
-						//important to use snapshotIterator here
+						// important to use snapshotIterator here
 						Iterator<Unit> i = body.getUnits().snapshotIterator();						
 						log.debug("method: "+ sm);
 						while(i.hasNext()){
@@ -128,30 +154,36 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 							if(s.containsInvokeExpr()) {
 								InvokeExpr invExpr = s.getInvokeExpr();
 								String methodSignature = invExpr.getMethod().getSignature();
+								
 								if(allEventInformation.containsKey(methodSignature)){
+									log.debug("statement "+ s +" matches "+ methodSignature +".");
 									ResultSinkInfo sink = null;
-									outer : for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
-										if (log.isDebugEnabled()) {
-											log.debug("result at " + s + ": k = "+ result.getKey());
-											for (ResultSourceInfo rsi: result.getValue())
-												log.debug("  ---> "+ rsi);
-										}
-										for (Value v : invExpr.getArgs())
-											if (v == result.getKey().getAccessPath().getPlainValue()) {
+									
+									outer:
+									for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
+
+										// iterate over all the arguments of the invoke expression
+										// and check if an argument is a tainted sink. If one is
+										// set variable 'sink' to the ResultSinkInfo key.
+										for (Value v : invExpr.getArgs()) {
+											Value pathValue = result.getKey().getAccessPath().getPlainValue();
+											if (v == pathValue) {
 												sink = result.getKey();
+												log.debug("found a sink: "+ pathValue);
 												break outer;
+											}
 										}
 									}
 																			
 									if(sink != null){
 										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
 										instrumentSourceToSinkConnections(cfg, sink, s instanceof AssignStmt);
-									}
-									else
+									} else {
 										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
+									}
 								}
-							}
-						}
+							} // if stmt containts invoke expression
+						} // loop on statements
 					}
 				}
 			}
@@ -203,47 +235,64 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		return Collections.emptyList();
 	}
 	
+	/**
+	 * 
+	 * @param cfg
+	 * @param sink
+	 * @param assignmentStatement
+	 */
 	private void instrumentSourceToSinkConnections(BiDiInterproceduralCFG<Unit, SootMethod> cfg, ResultSinkInfo sink, boolean assignmentStatement){
 		sourceSinkConnectionCounter += 1;
 		
-		for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
+		// loop through the sinks
+		for (Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()) {
+			
 			log.debug("compare: "+ result.getKey());
 			log.debug("     to: "+ sink);
+			
+			// if the current sink is the sink at the unit tagged with 'sink'
 			if(result.getKey().equals(sink)){
+				
+				// loop through the sources
 				for(ResultSourceInfo si : result.getValue()){
+					
 					Stmt stmt = si.getSource();
 					SootMethod sm = cfg.getMethodOf(stmt);
 					Body body = sm.retrieveActiveBody();
 					
-					if(isInterComponentSourceCallback(si, cfg)){
+					// Source instrumentation. The three type categories for the source are:
+					// - callback
+					// - ICC source method (i.e., Intent.getExtras())
+					// - not a callback and not an ICC source method (i.e., getLine1Number())
+					//
+					if (isInterComponentSourceCallback(si, cfg)) {
 						throw new RuntimeException("Callbacks as sources are not supported right now");
-					}
-					else if(isInterComponentSourceNoCallback(si, cfg)){
+					} else if (isInterComponentSourceNoCallback(si, cfg)) {
 						//only invoke expression are treated here
-						if(stmt.containsInvokeExpr()){
+						if (stmt.containsInvokeExpr()) {
 							//only statements that return a android.os.Bundle are currently supported
-							if(stmt instanceof DefinitionStmt){
+							if (stmt instanceof DefinitionStmt) {
 								DefinitionStmt defStmt = (DefinitionStmt)stmt;
 								Value leftValue = defStmt.getLeftOp();
 								
-								if(leftValue.getType().equals(RefType.v("android.os.Bundle"))){
+								if (leftValue.getType().equals(RefType.v("android.os.Bundle"))) {
 									InvokeExpr invExpr = Instrumentation.createJimpleStaticInvokeExpr(Settings.instance.INSTRUMENTATION_HELPER_JAVA, "registerNewSourceSinkConnection", IntType.v(), IntConstant.v(sourceSinkConnectionCounter), RefType.v("android.os.Bundle"), leftValue);
 									InvokeStmt invStmt = Jimple.v().newInvokeStmt(invExpr);
 									
 									Unit instrumentationPoint = null;
-									if(stmt instanceof IdentityStmt)
+									if (stmt instanceof IdentityStmt) {
 										instrumentationPoint = getLastIdentityStmt(body);
-									else
+									} else {
 										instrumentationPoint = stmt;
+									}
 									body.getUnits().insertAfter(invStmt, instrumentationPoint);
-								}
-								else
+								} else {
 									System.err.println("We do only support android.os.Bundle right now!");
+								}
 							}
 						}
-					}
-					else{
-						//source instrumentation
+					} else {
+
 						String sourceCat = getSourceCategory(si);
 						if(sourceCat != null){
 							InvokeExpr invExpr = Instrumentation.createJimpleStaticInvokeExpr(Settings.instance.INSTRUMENTATION_HELPER_JAVA, "registerNewSourceSinkConnection", IntType.v(), IntConstant.v(sourceSinkConnectionCounter), RefType.v("java.lang.String"), StringConstant.v(sourceCat));
@@ -258,7 +307,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						}
 					}
 					
-					//sink instrumentation
+					// sink instrumentation
 					if(sink.getSink().containsInvokeExpr()){	
 						Body bodyOfSink = cfg.getMethodOf(result.getKey().getSink()).getActiveBody();
 						InvokeExpr invExpr = sink.getSink().getInvokeExpr();
@@ -279,45 +328,78 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						throw new RuntimeException("Double-Check the assumption");
 					
 					
-				}
-			}
-		}
+				} // loop through the sources
+				
+			} // if the sink at the unit is the current sink
+			
+		} // loop through the sinks
+		
 	}
 	
 	
+	/**
+	 * Add Policy Enforcement Point (PEP) for Unit 'unit'.
+	 * @param methodSignature
+	 * @param unit
+	 * @param invExpr
+	 * @param body
+	 * @param assignmentStatement
+	 */
 	private void instrumentWithNoDataFlowInformation(String methodSignature, Unit unit, InvokeExpr invExpr, Body body, boolean assignmentStatement){
-		//do the instrumentation
-		EventInformation eventInfo = allEventInformation.get(methodSignature);
+		log.debug("add PEP without dataflow information for unit "+ unit);
 		
+		EventInformation eventInfo = allEventInformation.get(methodSignature);
 		List<Unit> generated = generatePolicyEnforcementPoint(unit, invExpr, body, -1, assignmentStatement);
 		
-		if(eventInfo.isInstrumentAfterStatement())
+		if(eventInfo.isInstrumentAfterStatement()) {
 			body.getUnits().insertAfter(generated, unit);
-		else
+		} else {
 			body.getUnits().insertBefore(generated, unit);
+		}
 		
 	}
 	
-	
+	/**
+	 * Generate Policy Enforcement Point (PEP) for Unit 'unit'.
+	 * @param unit
+	 * @param invExpr
+	 * @param body
+	 * @param dataFlowAvailable
+	 * @param assignmentStatement
+	 * @return
+	 */
 	private List<Unit> generatePolicyEnforcementPoint(Unit unit, InvokeExpr invExpr, Body body, int dataFlowAvailable, boolean assignmentStatement){
-		log.debug("dataflow available: "+ dataFlowAvailable);
-		List<Unit> generated = new ArrayList<Unit>();
+		
+		log.debug("Dataflow available: "+ dataFlowAvailable);
+		
+		List<Unit> generated = new ArrayList<Unit>(); // store all new units that are generated
+		
 		String methodSignature = invExpr.getMethod().getSignature();
 		EventInformation eventInfo = allEventInformation.get(methodSignature);
-		
 		String eventName = eventInfo.getEventName();
+		
 		Set<Pair<Integer, String>> allParameterInformation = eventInfo.getParameterInformation();
 		
+		// This list containts types and parameters that are used to build the
+		// invoke expression to "isStmtExecutionAllowed':
+		//
+		// java.lang.String   "eventName"
+		// IntType            "dataFlowAvailable"
+		// java.lang.Object[] "parameters"
+		// 
 		List<Object> parameterForHelperMethod = new ArrayList<Object>();
 		
+		// add event name information
 		Type eventNameType = RefType.v("java.lang.String");
 		parameterForHelperMethod.add(eventNameType);
 		StringConstant eventNameConstant = StringConstant.v(eventName);
 		parameterForHelperMethod.add(eventNameConstant);
 		
+		// add information about dataflow availability
 		parameterForHelperMethod.add(IntType.v());
 		parameterForHelperMethod.add(IntConstant.v(dataFlowAvailable));
 		
+		// add information about parameters
 		parameterForHelperMethod.add(getParameterArrayType());
 		List<Value> paramValues = new ArrayList<Value>();
 		
@@ -327,42 +409,68 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		}			
 		
 		Pair<Value, List<Unit>> arrayRefAndInstrumentation = generateParameterArray(paramValues, body);
-		//instrument new array
-//		body.getUnits().insertBefore(arrayRefAndInstrumentation.getRight(), unit);
+
 		generated.addAll(arrayRefAndInstrumentation.getRight());
 		
 		parameterForHelperMethod.add(arrayRefAndInstrumentation.getLeft());
 		
-		StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(Settings.instance.INSTRUMENTATION_HELPER_JAVA, "isStmtExecutionAllowed", parameterForHelperMethod.toArray());
 		
+		// Generate PEP call to the PDP. Store the result send by the PDP to 'resultPDPLocal'
+		// Pseudo code looks like this:
+		//
+		// resultPDPLocal = isStmtExecutionAllowed(eventName, dataFlowAvailable, parameters);
+		//
+		StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
+				Settings.instance.INSTRUMENTATION_HELPER_JAVA, 
+				"isStmtExecutionAllowed", 
+				parameterForHelperMethod.toArray());
 		
-		Local conditionLocal = generateFreshLocal(body, soot.IntType.v());
-		
-		AssignStmt asssCondition = Jimple.v().newAssignStmt(conditionLocal, sie);
-		
+		Local resultPDPLocal = generateFreshLocal(body, soot.IntType.v());
+		AssignStmt asssCondition = Jimple.v().newAssignStmt(resultPDPLocal, sie);
 		generated.add(asssCondition);
 		
 		
-		//condition check for pep - false case
-		//we also have to care about the initialiation of the local in case it is an assignment statement
 		if(assignmentStatement){
+			// If the method call before which the PEP in inserted is an assignment statement of
+			// the form "resultPDPLocal = originalCallThatIsChecked()", generate a new assignment 
+			// statement that stores a default value to "resultPDPLocal" if the PDP does not 
+			// allow the call of method originalCallThatIsChecked().
+			//
+			// Pseudo-code:
+			//
+			// if(resultPDPLocal == 0) goto dummyLabel:
+			// result = originalCallThatIsChecked();
+			// dummyLabel:
+			// result = dummyValue (i.e., 0 for IntType, false for BooleanType, ...)
+			//
+			
 			if(unit instanceof DefinitionStmt){
 				DefinitionStmt defStmt = (DefinitionStmt)unit; 
 				
-				Value pepCondition = Jimple.v().newEqExpr(conditionLocal, IntConstant.v(0));
+				Value pepCondition = Jimple.v().newEqExpr(resultPDPLocal, IntConstant.v(0));
 				
 				Unit dummyStatement = createCorrectDummyAssignment((Local)defStmt.getLeftOp());
 				body.getUnits().insertAfter(dummyStatement, unit);
 				
 				IfStmt ifStmt = Jimple.v().newIfStmt(pepCondition, dummyStatement);
 				generated.add(ifStmt);
-			}
-			else
+			} else {
 				throw new RuntimeException("error: expected DefinitionStmt got "+ unit +" -> "+ unit.getClass());
-		}
-		else{
-			//condition check for pep - true case
-			Value pepCondition = Jimple.v().newEqExpr(conditionLocal, IntConstant.v(0));
+			}
+			
+		} else {
+			// If the method call before which the PEP in inserted is a call statement of
+			// the form "originalCallThatIsChecked()", generate a new nop statement
+			// to jump to if the PDP does not allow the call of method originalCallThatIsChecked().
+			//
+			// Pseudo-code:
+			//
+			// if(resultPDPLocal == 0) goto nopLabel:
+			// result = originalCallThatIsChecked();
+			// nopLabel:
+			// nop
+			//
+			Value pepCondition = Jimple.v().newEqExpr(resultPDPLocal, IntConstant.v(0));
 			
 			NopStmt nopStmt = Jimple.v().newNopStmt();
 			body.getUnits().insertAfter(nopStmt, unit);
@@ -375,6 +483,12 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		return generated;
 	}
 	
+	/**
+	 * 
+	 * @param parameter
+	 * @param body
+	 * @return
+	 */
 	private Pair<Value, List<Unit>> generateParameterArray(List<Value> parameter, Body body){
 		List<Unit> generated = new ArrayList<Unit>();
 		
@@ -590,6 +704,13 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		return false;
 	}
 	
+	/**
+	 * Return true if the method corresponding to the source 'si' is an
+	 * Inter Component Communication source method such as "Intent.getExtras()".
+	 * @param si
+	 * @param cfg
+	 * @return
+	 */
 	private boolean isInterComponentSourceNoCallback(ResultSourceInfo si, BiDiInterproceduralCFG<Unit, SootMethod> cfg){
 		if(!si.getSource().containsInvokeExpr())
 			return false;
@@ -599,8 +720,10 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 				
 		for(AndroidMethod am : sources){
 			if(am.getCategory() == CATEGORY.INTER_APP_COMMUNICATION){
-				if(am.getSubSignature().equals(sm.getSubSignature()))
+				if(am.getSubSignature().equals(sm.getSubSignature())) {
+					log.info("source is: "+ am);
 					return true;
+				}
 			}
 		}
 		
@@ -621,6 +744,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		return false;
 	}
 	
+	/**
+	 * Generate a default assignment with 'local' as left-hand-side value.
+	 * @param local
+	 * @return
+	 */
 	private Unit createCorrectDummyAssignment(Local local){
 		Unit dummyAssignemnt = null;
 		if(local.getType() instanceof PrimType){
