@@ -76,27 +76,27 @@ public class appPDP extends Activity
           Log.i(TAG, "serviceBound");
           deployPolicy(currentPolicyFile);
 
-          // register observer for policy.xml file and react on modifcations
-          observer=new FileObserver(currentPolicyFile.getAbsolutePath())
-          {
-            @Override
-            public void onEvent(int event, String file)
-            {
-              if(event == FileObserver.MODIFY)
-              {
-                try
-                {
-                  deployPolicy(currentPolicyFile);
-                }
-                catch(Exception ex)
-                {
-                  Toast.makeText(getApplicationContext(), "Could not load policy file", Toast.LENGTH_LONG).show();
-                  ;
-                }
-              }
-            }
-          };
-          observer.startWatching();
+//          // register observer for policy.xml file and react on modifcations
+//          observer=new FileObserver(currentPolicyFile.getAbsolutePath())
+//          {
+//            @Override
+//            public void onEvent(int event, String file)
+//            {
+//              if(event == FileObserver.MODIFY)
+//              {
+//                try
+//                {
+//                  deployPolicy(currentPolicyFile);
+//                }
+//                catch(Exception ex)
+//                {
+//                  Toast.makeText(getApplicationContext(), "Could not load policy file", Toast.LENGTH_LONG).show();
+//                  ;
+//                }
+//              }
+//            }
+//          };
+//          observer.startWatching();
         }
 
       });
