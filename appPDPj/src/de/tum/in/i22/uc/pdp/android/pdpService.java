@@ -51,20 +51,20 @@ public class pdpService extends Service
   @Override
   public void onCreate()
   {
-    this.eventInformationFile=copyFileFromAssetsToInternalStorage(eventInformationFileName);
+    this.eventInformationFile=copyFileFromAssetsToInternalStorage(eventInformationFileName, true);
 
     this.decisionMessenger=new Messenger(new PDPDecisionHandler(getApplicationContext(), eventInformationFile));
     this.setPolicyMessenger=new Messenger(new SetPolicyHandler(getApplicationContext()));
     this.revokePolicyMessenger=new Messenger(new RevokePolicyHandler(getApplicationContext()));
   }
 
-  private File copyFileFromAssetsToInternalStorage(String fileName)
+  private File copyFileFromAssetsToInternalStorage(String fileName, boolean forceOverwrite)
   {
     String fileInternally=this.getFilesDir().toString() + File.separator + fileName;
     File file=new File(fileInternally);
     try
     {
-      if(!file.exists()) FileUtil.copyPolicyFileFromAssetsToInternalStorage(getApplicationContext(), fileName, fileInternally);
+      if(!file.exists() || forceOverwrite) FileUtil.copyPolicyFileFromAssetsToInternalStorage(getApplicationContext(), fileName, fileInternally);
     }
     catch(Exception ex)
     {
@@ -258,6 +258,14 @@ public class pdpService extends Service
 
       EventInformation eventInfo=eventNameToInfoMap.get(eventname);
 
+      if (eventInfo == null) {
+    	  Log.w(TAG, "warning: unknown event '"+ eventname +"'");
+    	  Log.w(TAG, "available events: ");
+    	  for (String k : eventNameToInfoMap.keySet()) {
+    		  Log.w(TAG, " -> "+ k);
+    	  }
+      }
+      
       for(Pair<Integer, String> parameterInformation : eventInfo.getParameterInformation())
       {
         String paramName=parameterInformation.getRight();

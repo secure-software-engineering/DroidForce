@@ -37,7 +37,6 @@ public class appPDP extends Activity
 
   private File currentPolicyFile = null;
   
-  private String[] mFileList; // stores policies located in the internal storage of the app
   private static final String POLICY_FILE_TYPE = ".xml";
   private static final int DIALOG_LOAD_POLICY = 0xBEEF;
 
@@ -51,7 +50,6 @@ public class appPDP extends Activity
     setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
     loadPoliciesFromAssets(); // copy policies in assets to the internal storage of the app
-    loadFileList(); // list all available policies, so the user can choose a policy from a dialog
 
     Log.d(TAG, "Preparing pdpService");
     Intent start=new Intent("de.tum.in.i22.uc.pdp.android.pdpService");
@@ -126,7 +124,7 @@ public class appPDP extends Activity
 			  continue;
 		  }
 		  Log.d(TAG, "loading '"+ s +"'");
-		  File file = copyFileFromAssetsToInternalStorage(s);
+		  File file = copyFileFromAssetsToInternalStorage(s, true);
 		  if (s.equals("policy.xml")) {
 			  setCurrentPolicy(s);
 		  }
@@ -162,7 +160,7 @@ public class appPDP extends Activity
 
 	  TextView textView2 = (TextView)findViewById(R.id.textView2);
 	  FileReader fr = null;
-	  String po = "";
+	  String po = "\n\n\n\n";
 	  try {
 		  fr = new FileReader(currentPolicyFile);
 
@@ -181,13 +179,15 @@ public class appPDP extends Activity
 	  textView2.setMovementMethod(new ScrollingMovementMethod());
   }
 
-  private File copyFileFromAssetsToInternalStorage(String fileName)
+  private File copyFileFromAssetsToInternalStorage(String fileName, boolean forceRewrite)
   {
     String fileInternally=this.getFilesDir().toString() + File.separator + fileName;
     File file=new File(fileInternally);
     try
     {
-      if(!file.exists()) FileUtil.copyPolicyFileFromAssetsToInternalStorage(getApplicationContext(), fileName, fileInternally);
+      if (!file.exists() || forceRewrite) {
+    	  FileUtil.copyPolicyFileFromAssetsToInternalStorage(getApplicationContext(), fileName, fileInternally);
+      }
     }
     catch(Exception ex)
     {
@@ -243,19 +243,20 @@ public class appPDP extends Activity
 
 
   public void deployPolicyWithButton(View v) {
+	  Log.v(TAG, "load policy with button.");
 	  showDialog(DIALOG_LOAD_POLICY);
   }
   
   
 
-	private void loadFileList() {
+	private String[] loadFileList() {
 	
 		File mPath =  this.getFilesDir();
 		Log.d(TAG, "loading files from internal directory '"+ mPath +"'");
 	
 		if(!mPath.exists()) {
 			Log.e(TAG, "directory does not exist! "+ mPath);
-			return;
+			return new String[0];
 		}
 		FilenameFilter filter = new FilenameFilter() {
 	
@@ -266,31 +267,33 @@ public class appPDP extends Activity
 			}
 	
 		};
-		mFileList = mPath.list(filter);
+		String[] list = mPath.list(filter);
 	
-		Log.d(TAG, "policy files loaded from internal directory: "+ mFileList.length);
-		for (String s: mFileList) {
+		Log.d(TAG, "policy files loaded from internal directory: "+ list.length);
+		for (String s: list) {
 			Log.d(TAG, " -> '"+ s +"'");
 		}
+		return list;
 	
 	}
 	
+	private String[] list = null;
 	protected Dialog onCreateDialog(int id) {
 		Dialog dialog = null;
 		AlertDialog.Builder builder = new Builder(this);
-
 	
 		switch(id) {
 		case DIALOG_LOAD_POLICY:
+			list = loadFileList(); // list all available policies, so the user can choose a policy from a dialog
 			builder.setTitle("Choose the policy");
-			if(mFileList == null) {
+			if(list == null) {
 				Log.e(TAG, "Showing file picker before loading the file list");
 				dialog = builder.create();
 				return dialog;
 			}
-			builder.setItems(mFileList, new DialogInterface.OnClickListener() {
+			builder.setItems(list, new DialogInterface.OnClickListener() {
 				public void onClick(DialogInterface dialog, int which) {
-					String chosenPolicy = mFileList[which];
+					String chosenPolicy = list[which];
 					setCurrentPolicy(chosenPolicy);
 					displayCurrentPolicy();
 					deployCurrentPolicy();
