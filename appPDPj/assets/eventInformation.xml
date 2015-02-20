@@ -111,6 +111,19 @@
 			<param pos="1" name="loggingmessage" />
 		</data>
 	</event>
+	
+	
+	
+	<!-- getStringExtra can be used to retrieve phone number  -->
+	
+	<event methodSignature="&lt;android.content.Intent: java.lang.String getStringExtra(java.lang.String)&gt;">
+		<eventname name="getStringExtra" />
+		<instrumentationpos>before</instrumentationpos>
+		<data>
+			<param pos="0" name="key" />
+		</data>
+	</event>
+	
 </events>
 
 
