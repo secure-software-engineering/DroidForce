@@ -65,6 +65,7 @@ import de.ecspride.Settings;
 import de.ecspride.events.EventInformation;
 import de.ecspride.events.Pair;
 import de.ecspride.instrumentation.Instrumentation;
+import de.ecspride.util.UpdateManifestAndCodeForWaitPDP;
 import de.ecspride.util.Util;
 
 /**
@@ -75,6 +76,8 @@ import de.ecspride.util.Util;
  */
 public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	private static Logger log = LoggerFactory.getLogger(PolicyEnforcementPoint.class);
+	
+	private boolean isResult = false;
 	/**
 	 * key: method-signature indicating the statement which needs some instrumentation
 	 * value: event-information about the event which will be triggered at the method-signature  
@@ -98,6 +101,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	
 	@Override
 	public void onResultsAvailable(IInfoflowCFG cfg, InfoflowResults results) {
+		isResult = true;
 		log.info("FlowDroid has finished. Duration: " + (System.currentTimeMillis() - Main.startTime) +" ms.");
 		Main.startTime = System.currentTimeMillis();
 		Settings.instance.setDummyMainToLibraryClass();
@@ -123,10 +127,20 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		log.info("Adding code to initialize PEPs.");
 		Util.initializePePInAllPossibleClasses(Settings.instance.getApkPath());
 		
+		log.info("Redirect main activity");
+		String mainActivityClass = UpdateManifestAndCodeForWaitPDP.redirectMainActivity(Settings.instance.getApkPath());
+		UpdateManifestAndCodeForWaitPDP.updateWaitPDPActivity(mainActivityClass);
+		
 		log.info("Adding Policy Enforcement Points (PEPs).");
 		doAccessControlChecks(cfg);
 		
 		log.info("Instrumentation is done.");
+		
+		if (Settings.mustOutputJimple()) {
+			log.info("-------- Dumping Jimple bodies.");
+			Main.dumpJimple();
+			log.info("--------");
+		}
 	}
 	
 	/**
@@ -286,6 +300,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 										instrumentationPoint = stmt;
 									}
 									body.getUnits().insertAfter(invStmt, instrumentationPoint);
+									log.debug("insert a: "+ invStmt);
 								} else {
 									System.err.println("We do only support android.os.Bundle right now!");
 								}
@@ -304,6 +319,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 							else
 								instrumentationPoint = stmt;
 							body.getUnits().insertAfter(invStmt, instrumentationPoint);
+							log.debug("insert b: "+ invStmt);
 						}
 					}
 					
@@ -318,6 +334,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						
 						generated.addAll(generatePolicyEnforcementPoint(result.getKey().getSink(), invExpr,
 								bodyOfSink, sourceSinkConnectionCounter, assignmentStatement));
+						
+						log.debug("body with data flow:\n"+body);
+						for (Unit u: generated) {
+							log.debug("gen: "+ u);
+						}
 						
 						if(eventInfo.isInstrumentAfterStatement())
 							bodyOfSink.getUnits().insertAfter(generated, result.getKey().getSink());
@@ -350,6 +371,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		
 		EventInformation eventInfo = allEventInformation.get(methodSignature);
 		List<Unit> generated = generatePolicyEnforcementPoint(unit, invExpr, body, -1, assignmentStatement);
+		
+		log.debug("body no data flow:\n"+body);
+		for (Unit u: generated) {
+			log.debug("gen: "+ u);
+		}
 		
 		if(eventInfo.isInstrumentAfterStatement()) {
 			body.getUnits().insertAfter(generated, unit);
@@ -440,17 +466,29 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 			//
 			// if(resultPDPLocal == 0) goto dummyLabel:
 			// result = originalCallThatIsChecked();
+			// goto dummyLabel2:
 			// dummyLabel:
 			// result = dummyValue (i.e., 0 for IntType, false for BooleanType, ...)
+			// dummyLabel2:
+			// nop
 			//
 			
 			if(unit instanceof DefinitionStmt){
 				DefinitionStmt defStmt = (DefinitionStmt)unit; 
 				
 				Value pepCondition = Jimple.v().newEqExpr(resultPDPLocal, IntConstant.v(0));
-				
+
+				// insert nop
+				Unit label2Nop = Jimple.v().newNopStmt();
+				body.getUnits().insertAfter(label2Nop, unit);
+			
+				// insert result = dummyValue
 				Unit dummyStatement = createCorrectDummyAssignment((Local)defStmt.getLeftOp());
 				body.getUnits().insertAfter(dummyStatement, unit);
+				log.debug("insert c: "+ dummyStatement);
+				
+				// insert goto dummyLabel2:
+				body.getUnits().insertAfter(Jimple.v().newGotoStmt(label2Nop), unit);
 				
 				IfStmt ifStmt = Jimple.v().newIfStmt(pepCondition, dummyStatement);
 				generated.add(ifStmt);
@@ -474,6 +512,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 			
 			NopStmt nopStmt = Jimple.v().newNopStmt();
 			body.getUnits().insertAfter(nopStmt, unit);
+			log.debug("insert d: "+ nopStmt);
 			
 			IfStmt ifStmt = Jimple.v().newIfStmt(pepCondition, nopStmt);
 			
@@ -631,13 +670,14 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 	}
 	
 	private boolean isInstrumentationNecessary(SootMethod method){
-		if(method.getDeclaringClass().isJavaLibraryClass() ||
-				method.getDeclaringClass().toString().startsWith("android.") ||
-				method.getDeclaringClass().toString().equals(Settings.instance.EVENT_PEP_JAVA) ||
-			method.getDeclaringClass().toString().equals(Settings.instance.REMOTE_SERVICE_CONNECTION_JAVA) ||
-			method.getDeclaringClass().toString().equals(Settings.instance.INCOMING_HANDLER_JAVA) ||
-			method.getDeclaringClass().toString().equals(Settings.instance.INSTRUMENTATION_HELPER_JAVA))
+		if (method.getDeclaringClass().isJavaLibraryClass())
 			return false;
+		if (method.getDeclaringClass().toString().startsWith("android."))
+			return false;
+		for (String cn: Settings.class2AddList) {
+			if (method.getDeclaringClass().toString().startsWith(cn))
+				return false;
+		}
 		return true;
 	}
 	
