@@ -75,11 +75,10 @@
 		<instrumentationpos>before</instrumentationpos>
 	</event>
 	
-	
-	
-	
-	
-	
+	<event methodSignature="&lt;android.telephony.TelephonyManager: java.lang.String getLine1Number()&gt;">
+		<eventname name="phoneNumber" />
+		<instrumentationpos>before</instrumentationpos>
+	</event>	
 	
 	<event methodSignature="&lt;android.telephony.SmsManager: void sendTextMessage(java.lang.String,java.lang.String,java.lang.String,android.app.PendingIntent,android.app.PendingIntent)&gt;">
 		<eventname name="sentTextMessage" />
@@ -111,6 +110,16 @@
 			<param pos="1" name="loggingmessage" />
 		</data>
 	</event>
+	
+	<!-- getStringExtra is used to retrieve the phone number for instance -->
+	<event methodSignature="&lt;android.content.Intent: java.lang.String getStringExtra(java.lang.String)&gt;">
+		<eventname name="getStringExtra" />
+		<instrumentationpos>before</instrumentationpos>
+		<data>
+			<param pos="0" name="key" />
+		</data>
+	</event>
+	
 </events>
 
 
