@@ -1,7 +1,20 @@
 package de.ecspride;
 
+import java.io.File;
 import java.util.Map;
 import java.util.Set;
+
+
+
+
+
+
+
+
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import soot.PackManager;
 import soot.Scene;
@@ -15,22 +28,30 @@ import soot.jimple.infoflow.solver.IInfoflowCFG;
 import soot.jimple.infoflow.solver.InfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
+import soot.options.Options;
 import de.ecspride.events.EventInformation;
 import de.ecspride.events.EventInformationParser;
 import de.ecspride.pep.ConfigForPolicyEnforcementPoint;
 import de.ecspride.pep.PolicyEnforcementPoint;
 import de.ecspride.util.SourcesSinks;
+import de.ecspride.util.UpdateManifestAndCodeForWaitPDP;
 import de.ecspride.util.Util;
 
 public class Main {
+	public static Logger log = LoggerFactory.getLogger(Main.class);
 	public static long startTime = 0;
+	
 	public static void main(String[] args) {
 		startTime = System.currentTimeMillis();
+		long d = 0;
 		Set<AndroidMethod> sources, sinks;
+		
+		log.info("Starting Intrumentation-PEP");
 		
 		//arguments will be set
 		Settings.instance.parseCommandLineArgs(args);
 		
+		log.info("Initialize Soot and FlowDroid.");
 		//Soot is initialized
 		Settings.instance.initialiseSoot();
 		//clean the sootOutput dir before start
@@ -40,6 +61,15 @@ public class Main {
 		//events we will cover
 		EventInformationParser eventInfoParser = new EventInformationParser();
 		Map<String, EventInformation> eventInformation = eventInfoParser.parseEventInformation();
+
+		if (log.isDebugEnabled()) {
+			log.debug("All Event Information:");
+			for (String k: eventInformation.keySet()) {
+				log.debug("event information for "+ k);
+				log.debug(""+ eventInformation.get(k));
+			}
+			log.debug("");
+		}
 		
 		SourcesSinks sourcesSinks = new SourcesSinks();
 		//get Android sources
@@ -57,10 +87,15 @@ public class Main {
 			ex.printStackTrace();
 			System.exit(0);
 		}
+		d = (System.currentTimeMillis() - startTime);
+		log.info("Initialization done. Duration: "+ d +" ms.");
 		
-		
+		log.info("Starting taint analysis and bytecode instrumentation.");
+		startTime = System.currentTimeMillis();
 		runFlowDroid(setupApp, eventInformation);
-		System.out.println("xxxxxxxxxTime dynamic part: " + (System.currentTimeMillis() - startTime));
+		d = (System.currentTimeMillis() - startTime);
+		log.info("Taint analysis and bytecode instrumentation have finished. Duration: " + d +" ms");
+
 	}
 	
 	private static void runFlowDroid(SetupApplication setupApp, Map<String, EventInformation> eventInformation){
@@ -88,16 +123,47 @@ public class Main {
 		setupApp.setEnableStaticFieldTracking(false);
 		setupApp.setFlowSensitiveAliasing(false);
 		setupApp.setAccessPathLength(1);
+		setupApp.setEnableImplicitFlows(false); // TODO: add an option for this
 		
 		PolicyEnforcementPoint pep = new PolicyEnforcementPoint(eventInformation, setupApp.getSources(), setupApp.getSinks(), setupApp.getEntryPointCreator());
 		setupApp.runInfoflow(pep); 
 		
-		//write output file (.class or .apk)
+
+
+		// set Soot's output directory
+		File originalApkFile = new File(Settings.instance.apkFile);
+		String targetApk = Settings.sootOutput + File.separatorChar + originalApkFile.getName();
+		Options.v().set_output_dir(Settings.sootOutput);
+
+		// write output file (.class or .apk)
 		for (SootClass sc : Scene.v().getClasses())
 			for (SootMethod sm : sc.getMethods())
 				if (sm.hasActiveBody())
 					sm.getActiveBody().validate();
 		PackManager.v().writeOutput();
+
+		// update manifest
+		UpdateManifestAndCodeForWaitPDP.replaceManifest(Settings.instance.apkFile);
+		// add background image
+		UpdateManifestAndCodeForWaitPDP.addBackgroundFile(Settings.instance.apkFile);
+	}
+
+	public static void dumpJimple() {
+
+		log.info("output jimple files:");
+		for (SootClass sc: Scene.v().getApplicationClasses()) {
+			log.debug("application class: "+ sc);
+			for (SootMethod sm: sc.getMethods()) {
+				if (sm.isConcrete() && !sm.toString().contains("de.ecspride.javaclasses")) {
+					System.out.println("m: "+ sm);
+					if (null == sm.getSource()) {
+						System.out.println("no source!");
+					}
+					System.out.println(sm.retrieveActiveBody());
+				}
+			}
+		}
+
 	}
 
 }

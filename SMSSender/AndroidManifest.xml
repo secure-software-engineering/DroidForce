@@ -25,6 +25,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name="com.example.smssenderOrig.DisplayMessageActivity"
+        		  android:label="Display Activity">
+    	</activity>
+        
     </application>
 
 </manifest>

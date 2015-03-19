@@ -2,6 +2,9 @@ package de.ecspride.instrumentation;
 
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
@@ -11,6 +14,8 @@ import soot.jimple.Jimple;
 import soot.jimple.StaticInvokeExpr;
 
 public class Instrumentation {
+	
+	private static Logger log = LoggerFactory.getLogger(Instrumentation.class);
 	
 	public static StaticInvokeExpr createJimpleStaticInvokeExpr(String javaClass, String call, Object... args) {
 		SootClass sootClass = Scene.v().getSootClass(javaClass);
@@ -35,6 +40,8 @@ public class Instrumentation {
 		SootMethod createAndAdd = sootClass.getMethod(call, argTypes);
 		StaticInvokeExpr sie = Jimple.v().newStaticInvokeExpr(
 				createAndAdd.makeRef(), argList);
+		
+		log.debug("new invoke expression: "+ sie);
 		
 		return sie;
 	}

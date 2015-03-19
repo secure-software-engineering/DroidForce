@@ -15,7 +15,7 @@ import android.util.Log;
 
 public class InstrumentationHelper {
 	public static EventPEP eventPep = null;
-	public static ServiceConnection connection = null;
+	public static RemoteServiceConnection connection = null;
 	private final static String keyBaseName = "taintinfo";
 	
 	public static Map<Integer, Set<String>> sourceSinkConnection = new HashMap<Integer, Set<String>>();
@@ -43,6 +43,15 @@ public class InstrumentationHelper {
 	public static boolean isStmtExecutionAllowed(String eventName, int dataFlowAvailable, Object... parameter){
 		Log.i("PEP", "in InstrumentationHelper.isStmtExecutionAllowed");
 		
+		if (eventName == null) {
+			Log.e("DroidForce", "eventName is null!");
+			throw new RuntimeException("error: eventName is null");
+		}
+		if (parameter == null) {
+			Log.e("DroidForce", "parameter is null!");
+			throw new RuntimeException("error: parameter is null");
+		}
+			
 		Bundle event = new Bundle();
 		
 		event.putString("eventname", eventName);

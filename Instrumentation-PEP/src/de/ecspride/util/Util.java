@@ -7,8 +7,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xmlpull.v1.XmlPullParserException;
 
 import soot.Body;
@@ -23,12 +26,18 @@ import soot.Unit;
 import soot.javaToJimple.LocalGenerator;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
+import soot.jimple.NullConstant;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
+import soot.jimple.infoflow.android.axml.AXmlAttribute;
+import soot.jimple.infoflow.android.axml.AXmlHandler;
+import soot.jimple.infoflow.android.axml.AXmlNode;
+import soot.jimple.infoflow.android.axml.ApkHandler;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
 import soot.util.EscapedWriter;
 import de.ecspride.Settings;
 import de.ecspride.instrumentation.Instrumentation;
+import de.ecspride.pep.PolicyEnforcementPoint;
 
 /**
  * Different util methods which do not fit into the transformer class (PolicyEnforcementTransformer).
@@ -36,13 +45,16 @@ import de.ecspride.instrumentation.Instrumentation;
  *
  */
 public class Util {
+	
+	private static Logger log = LoggerFactory.getLogger(Util.class);
+	
 	public static boolean isAndroidClass(SootClass c){
 		return c.getName().startsWith("android.");
 	}
 	
 	public static void clearSootOutputJimpleDir(){
 		System.err.println("deleting sootOutput folder...");
-		cleanFolder("./sootOutput");	
+		cleanFolder(Settings.sootOutput);	
 	}
 	
 	private static void cleanFolder(String fileName) {
@@ -61,7 +73,7 @@ public class Util {
 
 	public static void writeJimpleFiles(SootClass c){
 		String correctFormat = c.getPackageName().replace(".", File.separator);
-		File dir = new File("sootOutput" + File.separator + "/jimple" + File.separator + correctFormat);
+		File dir = new File(Settings.sootOutput + File.separator + "/jimple" + File.separator + correctFormat);
 		dir.mkdirs();
 		
 		String fileName = c.getName().substring(c.getName().lastIndexOf(".") + 1);
@@ -110,6 +122,7 @@ public class Util {
 	
 	private static void initializePeP(SootClass sc){
 		SootMethod onCreate = null;
+		log.info("add Pep initialization in class "+ sc);
 		for(SootMethod sm : sc.getMethods()){
 			if(sm.getName().equals("onCreate") && 
 					sm.getParameterCount() == 1 && 
@@ -138,7 +151,7 @@ public class Util {
 			StaticInvokeExpr staticInvExpr = Instrumentation.createJimpleStaticInvokeExpr(Settings.instance.INSTRUMENTATION_HELPER_JAVA, Settings.instance.INSTRUMENTATION_HELPER_INITIALIZE_METHOD, typeAndArgument);
 			generated.add(Jimple.v().newInvokeStmt(staticInvExpr));
 			
-			Unit onCreateSpecialInvoke = getUnitAfterSuperOnCreate(body);
+			Unit onCreateSpecialInvoke = getSuperOnCreateUnit(body);
 			if(onCreateSpecialInvoke == null)
 				throw new RuntimeException("error: super.onCreate() statement missing in method "+ onCreate);
 			
@@ -153,7 +166,7 @@ public class Util {
 		return lg.generateLocal(type);
 	}
 	
-	private static Unit getUnitAfterSuperOnCreate(Body b) {
+	public static Unit getSuperOnCreateUnit(Body b) {
 		for(Unit u : b.getUnits()){
 			if(u instanceof InvokeStmt){
 				InvokeStmt invStmt = (InvokeStmt)u;

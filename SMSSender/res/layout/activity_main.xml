@@ -19,7 +19,8 @@
         android:id="@+id/message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:ems="10" >
+        android:ems="10" 
+        android:text=" enter text here...">
 
         <requestFocus />
     </EditText>
@@ -50,7 +51,7 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:inputType="numberSigned"
-        android:text="3" />
+        android:text="1" />
 
     <Button
         android:id="@+id/button1"

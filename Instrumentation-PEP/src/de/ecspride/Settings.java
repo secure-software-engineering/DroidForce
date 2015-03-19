@@ -3,6 +3,9 @@ package de.ecspride;
 import java.io.File;
 import java.util.Collections;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import soot.Scene;
 import soot.SootClass;
 import soot.options.Options;
@@ -11,6 +14,9 @@ import soot.options.Options;
  * @author Siegfried Rasthofer
  */
 public class Settings {
+	
+	// log
+	Logger log = LoggerFactory.getLogger(Settings.class);
 	
 	//singleton
 	public static Settings instance = new Settings();
@@ -21,12 +27,30 @@ public class Settings {
 	//information about all events (method signatrues) we do care
 	public final static String eventInformationFile = "./files/eventInformation.xml";	
 	
-	//java classes that will be added to the apk
-	public final String REMOTE_SERVICE_CONNECTION_JAVA = "de.ecspride.javaclasses.RemoteServiceConnection";
-	public final String INSTRUMENTATION_HELPER_JAVA = "de.ecspride.javaclasses.InstrumentationHelper";
-	public final String EVENT_PEP_JAVA = "de.ecspride.javaclasses.EventPEP";
-	public final String INCOMING_HANDLER_JAVA = "de.ecspride.javaclasses.IncomingHandler";
-	public final String SANITIZER = "de.ecspride.javaclasses.Sanitizer";
+	// Java classes that will be added to the apk
+	public final static String javaPackageToAdd = "de.ecspride.javaclasses";
+	public final static String REMOTE_SERVICE_CONNECTION_JAVA = "de.ecspride.javaclasses.RemoteServiceConnection";
+	public final static String INSTRUMENTATION_HELPER_JAVA = "de.ecspride.javaclasses.InstrumentationHelper";
+	public final static String EVENT_PEP_JAVA = "de.ecspride.javaclasses.EventPEP";
+	public final static String INCOMING_HANDLER_JAVA = "de.ecspride.javaclasses.IncomingHandler";
+	public final static String SANITIZER = "de.ecspride.javaclasses.Sanitizer";
+	public final static String WAIT_PDP_ACTIVITY = "de.ecspride.javaclasses.WaitPDPActivity";
+	public final static String WAIT_PDP_ACTIVITY1 = "de.ecspride.javaclasses.WaitPDPActivity$1";
+	public final static String WAIT_PDP_ACTIVITY11 = "de.ecspride.javaclasses.WaitPDPActivity$1$1";
+	public final static String WAIT_PDP_ACTIVITY2 = "de.ecspride.javaclasses.WaitPDPActivity$2";
+	public final static String WAIT_PDP_ACTIVITY21 = "de.ecspride.javaclasses.WaitPDPActivity$2$1";
+	public final static String[] class2AddList = {
+			REMOTE_SERVICE_CONNECTION_JAVA,
+			INSTRUMENTATION_HELPER_JAVA,
+			EVENT_PEP_JAVA,
+			INCOMING_HANDLER_JAVA,
+			SANITIZER,
+			WAIT_PDP_ACTIVITY,
+			WAIT_PDP_ACTIVITY1,
+			WAIT_PDP_ACTIVITY2,
+			WAIT_PDP_ACTIVITY11,
+			WAIT_PDP_ACTIVITY21
+	};
 	
 	public final String INSTRUMENTATION_HELPER_INITIALIZE_METHOD = "initializeEventPEP";
 	
@@ -54,6 +78,10 @@ public class Settings {
 	
 	//this file contains information about the taint-wrapper
 	public String taintWrapperFile;
+	
+	public static boolean jimpleOutput = false;
+	
+	public static String sootOutput = null;
 
 	//initialize soot
 	public void initialiseSoot(){
@@ -93,25 +121,19 @@ public class Settings {
 	 * Add all java-classes to the basic classes with the BODIES settings, since they will be
 	 * set as application class in addInstrumentedClassToApplicationClass()
 	 */
-	public void initialiseInstrumentationClasses(){
-		Scene.v().addBasicClass(instance.REMOTE_SERVICE_CONNECTION_JAVA, SootClass.BODIES);
-		Scene.v().addBasicClass(instance.INSTRUMENTATION_HELPER_JAVA, SootClass.BODIES);
-		Scene.v().addBasicClass(instance.INCOMING_HANDLER_JAVA, SootClass.BODIES);
-		Scene.v().addBasicClass(instance.EVENT_PEP_JAVA, SootClass.BODIES);
-		Scene.v().addBasicClass(instance.SANITIZER, SootClass.BODIES);
-
+	public void initialiseInstrumentationClasses() {
+		for (String class2Add: class2AddList) {
+			Scene.v().addBasicClass(class2Add, SootClass.BODIES);
+		}
 	}
 	
 	/**
 	 * Set java-classes to application class in order to be added to the apk.
 	 */
 	public void addInstrumentedClassToApplicationClass(){
-		Scene.v().getSootClass(instance.REMOTE_SERVICE_CONNECTION_JAVA).setApplicationClass();
-		Scene.v().getSootClass(instance.INSTRUMENTATION_HELPER_JAVA).setApplicationClass();
-		Scene.v().getSootClass(instance.INCOMING_HANDLER_JAVA).setApplicationClass();
-		Scene.v().getSootClass(instance.EVENT_PEP_JAVA).setApplicationClass();
-		Scene.v().getSootClass(instance.SANITIZER).setApplicationClass();
-
+		for (String class2Add: class2AddList) {
+			Scene.v().getSootClass(class2Add).setApplicationClass();
+		}
 	}
 	
 	/**
@@ -134,7 +156,9 @@ public class Settings {
 					+ "-androidJar </path/to/android.jar>\n"
 					/* + "-instrumentationType [hybrid|complete]\n" */
 					+ "-taintWrapper </path/to/taintWrapper.txt>\n"
-					/* + "-jimpleOutput [true|false]" */ );
+					+ "-d enable debug\n"
+					+ "-j enable Jimple output\n" 
+					+ "-o output directory\n");
 			System.out.println(output.toString());
 		}
 		
@@ -174,8 +198,16 @@ public class Settings {
 					++i;
 					correctArgumentCheck(args[i]);
 					apkFile = args[i];	
-				}
-				else{
+				} else if (args[i].equals("-j")) {
+					jimpleOutput = true;
+					log.info("Jimple output enabled.");
+				} else if (args[i].equals("-o")) {
+					sootOutput = args[++i];
+					File f = new File(sootOutput);
+					if (!f.exists())
+						f.mkdirs();
+					log.info("Soot output: "+ sootOutput);
+				} else {
 					System.err.println("unknown option '"+ args[i] +"'");
 					printHelp();
 					System.exit(0);
@@ -185,10 +217,16 @@ public class Settings {
 			
 			//check for correct settings
 			if(sourceFile == null || sinkFile == null || apkFile == null){
-				System.err.println("Ooops, the command line arguments are not correct!"
+				System.err.println("Error: command line arguments are not correct!"
 						+ "\nInstrumentation stopped...");
 				printHelp();
-				System.exit(0);
+				System.exit(-1);
+			}
+			
+			if (sootOutput == null) {
+				System.err.println("Error: no output directory specified.");
+				printHelp();
+				System.exit(-1);
 			}
 			
 		}
@@ -202,6 +240,10 @@ public class Settings {
 		//reset all Settings
 		public void reset(){
 			instance = new Settings();
+		}
+		
+		public static boolean mustOutputJimple() {
+			return jimpleOutput;
 		}
 		
 		/**

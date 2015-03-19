@@ -14,7 +14,7 @@ import android.util.Log;
 
 public class EventPEP {
 	private final String TAG = "PEP";
-	boolean isBound = false;
+	static boolean isBound = false;
 	Messenger messenger = null;
 	private Messenger replyTo = null;
 
@@ -32,8 +32,26 @@ public class EventPEP {
 		Handler handler = new Handler(looper, callback);
 		this.replyTo = new Messenger(handler);
 	}
+	
+	public static boolean isBound() {
+		return isBound;
+	}
 
 	public boolean isStmtExecutionAllowed(Bundle event) {
+		
+		// wait for connection to PDP
+		if (!isBound) {
+			while (!isBound) {
+				Log.i("PEP", "waiting for connection to PDP...");
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					Log.e("PEP", "error when sleeping..."+ e);
+					e.printStackTrace();
+				}
+			}
+		}
+		
 		Log.i("PEP", "in EventPEP.isStmtExecutionAllowed");
 
 		Message m = Message.obtain();

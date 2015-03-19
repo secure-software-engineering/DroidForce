@@ -1,6 +1,8 @@
 package de.ecspride.javaclasses;
 
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Messenger;
@@ -14,7 +16,7 @@ public class RemoteServiceConnection implements ServiceConnection {
 		Log.i("PEP", "in RemoteServiceConnection.RemoteServiceConnection");
 		this.appPEP = paramMainActivity;
 	}
-
+	
 	@Override
 	public void onServiceConnected(ComponentName component, IBinder binder) {
 		Log.i("PEP", "in RemoteServiceConnection.onServiceConnected");
@@ -28,4 +30,5 @@ public class RemoteServiceConnection implements ServiceConnection {
 		this.appPEP.messenger = null;
 		this.appPEP.isBound = false;
 	}
+
 }
