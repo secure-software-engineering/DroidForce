@@ -125,7 +125,11 @@ public class Main {
 		setupApp.setAccessPathLength(1);
 		setupApp.setEnableImplicitFlows(false); // TODO: add an option for this
 		
-		PolicyEnforcementPoint pep = new PolicyEnforcementPoint(eventInformation, setupApp.getSources(), setupApp.getSinks(), setupApp.getEntryPointCreator());
+		PolicyEnforcementPoint pep = new PolicyEnforcementPoint(
+				eventInformation,
+				setupApp.getSources(),
+				setupApp.getSinks(),
+				setupApp.getEntryPointCreator());
 		setupApp.runInfoflow(pep); 
 		
 
