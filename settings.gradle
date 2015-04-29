@@ -1,0 +1,3 @@
+include 'uclib4Android'
+include 'cm4Android'
+include 'appPDPj-lib'
