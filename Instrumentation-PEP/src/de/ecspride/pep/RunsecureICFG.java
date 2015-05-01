@@ -1,6 +1,6 @@
 package de.ecspride.pep;
 
-import soot.jimple.infoflow.solver.InfoflowCFG;
+import soot.jimple.infoflow.solver.cfg.InfoflowCFG;
 
 
 /**

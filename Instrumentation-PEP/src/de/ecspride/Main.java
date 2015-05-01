@@ -13,6 +13,7 @@ import java.util.Set;
 
 
 
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,8 +25,8 @@ import soot.jimple.infoflow.IInfoflow.CallgraphAlgorithm;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.cfg.BiDirICFGFactory;
-import soot.jimple.infoflow.solver.IInfoflowCFG;
-import soot.jimple.infoflow.solver.InfoflowCFG;
+import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
+import soot.jimple.infoflow.solver.cfg.InfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
