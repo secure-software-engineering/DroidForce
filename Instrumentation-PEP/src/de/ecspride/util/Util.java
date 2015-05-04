@@ -20,6 +20,7 @@ import soot.Printer;
 import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
@@ -34,6 +35,8 @@ import soot.jimple.infoflow.android.axml.AXmlHandler;
 import soot.jimple.infoflow.android.axml.AXmlNode;
 import soot.jimple.infoflow.android.axml.ApkHandler;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
+import soot.tagkit.StringConstantValueTag;
+import soot.tagkit.Tag;
 import soot.util.EscapedWriter;
 import de.ecspride.Settings;
 import de.ecspride.instrumentation.Instrumentation;
@@ -176,5 +179,21 @@ public class Util {
 		}
 		
 		return null;
+	}
+
+	public static void changeConstantStringInField(SootField sf,
+			String targetPDPpackage) {
+		StringConstantValueTag target = null;
+		for (Tag t: sf.getTags()) {
+			if (t instanceof StringConstantValueTag) {
+				target = (StringConstantValueTag)t;
+				break;
+			}
+		}
+		if (target == null)
+			throw new RuntimeException("error: no StringConstant found for field "+ sf);
+		sf.getTags().remove(target);
+		sf.getTags().add(new StringConstantValueTag(Settings.pdpClass));
+		
 	}
 }

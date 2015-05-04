@@ -17,6 +17,8 @@ public class InstrumentationHelper {
 	public static EventPEP eventPep = null;
 	public static RemoteServiceConnection connection = null;
 	private final static String keyBaseName = "taintinfo";
+	private static final String pdpPackage = "de.tum.in.i22.uc.pdp.android";
+	private static final String pdpClassFull = "de.tum.in.i22.uc.pdp.android.pdpService";
 	
 	public static Map<Integer, Set<String>> sourceSinkConnection = new HashMap<Integer, Set<String>>();
 	
@@ -35,7 +37,7 @@ public class InstrumentationHelper {
 	private static void setupBindService(Context context){
 		Log.i("PEP", "in InstrumentationHelper.setupBindService");
 		Intent intent=new Intent();
-	    intent.setClassName("de.tum.in.i22.uc.pdp.android", "de.tum.in.i22.uc.pdp.android.pdpService");
+	    intent.setClassName(pdpPackage, pdpClassFull);
 	    intent.setAction("de.tum.in.i22.uc.pdp.android.pdpService");
 	    context.bindService(intent, connection, Context.BIND_AUTO_CREATE);
 	}

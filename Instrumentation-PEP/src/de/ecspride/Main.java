@@ -14,12 +14,16 @@ import java.util.Set;
 
 
 
+
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import soot.PackManager;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.infoflow.IInfoflow.CallgraphAlgorithm;
 import soot.jimple.infoflow.android.SetupApplication;
@@ -30,6 +34,8 @@ import soot.jimple.infoflow.solver.cfg.InfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
+import soot.tagkit.StringConstantValueTag;
+import soot.tagkit.Tag;
 import de.ecspride.events.EventInformation;
 import de.ecspride.events.EventInformationParser;
 import de.ecspride.pep.ConfigForPolicyEnforcementPoint;
@@ -140,6 +146,22 @@ public class Main {
 		String targetApk = Settings.sootOutput + File.separatorChar + originalApkFile.getName();
 		Options.v().set_output_dir(Settings.sootOutput);
 
+		// update javaclasses with targetPDP class if any was given.
+		if (Settings.pdpClass != null) {
+			
+			String targetPDPFullClass = Settings.pdpClass;
+			String targetPDPpackage = Settings.pdpClass.replaceAll("\\.[^\\.]*$", "");
+			
+			SootClass sc = Scene.v().getSootClass(Settings.INSTRUMENTATION_HELPER_JAVA);
+			SootField sf1 = sc.getFieldByName("pdpPackage");
+			Util.changeConstantStringInField(sf1, targetPDPpackage);
+			
+			SootField sf2 = sc.getFieldByName("pdpClassFull");
+			Util.changeConstantStringInField(sf2, targetPDPFullClass);
+			
+			log.info("updated fields for taget pdf: "+ targetPDPFullClass +" - "+ targetPDPpackage);
+		}
+					
 		// write output file (.class or .apk)
 		for (SootClass sc : Scene.v().getClasses())
 			for (SootMethod sm : sc.getMethods())
