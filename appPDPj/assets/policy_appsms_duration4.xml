@@ -1,0 +1,36 @@
+<?xml version='1.0' standalone='yes'?>
+<policy     
+    xmlns="http://www22.in.tum.de/enforcementLanguage"
+    xmlns:tns="http://www22.in.tum.de/enforcementLanguage" 
+    xmlns:a="http://www22.in.tum.de/action"
+    xmlns:e="http://www22.in.tum.de/event" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    
+    name="bliblablub">
+
+    <!-- Limit the number of tentatives of SMS sending to 2 -->
+    
+    <preventiveMechanism name="test2" >
+        <description>New Policy</description>
+        <timestep amount="500" unit="MILLISECONDS" />
+        
+        <trigger action="sentTextMessage" tryEvent="true" >
+            <paramMatch name="destination" value="12345" />
+        </trigger>
+        
+        <condition> 
+            <not>
+				<repLim amount="20" unit="SECONDS" lowerLimit="0" upperLimit="1">
+		           	<eventMatch action="sentTextMessage" tryEvent="true" >
+						<paramMatch name="destination" value="12345" />
+                    </eventMatch>
+                </repLim>
+            </not>
+        </condition>
+
+        <authorizationAction name="default" >
+            <inhibit />
+        </authorizationAction>
+    </preventiveMechanism>
+
+</policy>
