@@ -235,7 +235,7 @@ public class Settings {
 				System.exit(-1);
 			}
 			
-			if (!pdpClass.contains(":")) {
+			if (pdpClass != null && !pdpClass.contains(":")) {
 				System.err.println("Error: wrong format for option -pdp '"+ pdpClass +"'");
 				printHelp();
 				System.exit(-1);

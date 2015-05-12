@@ -17,8 +17,8 @@ public class InstrumentationHelper {
 	public static EventPEP eventPep = null;
 	public static RemoteServiceConnection connection = null;
 	private final static String keyBaseName = "taintinfo";
-	private static final String pdpPackage = "de.tum.in.i22.uc.pdp.android";
-	private static final String pdpClassFull = "de.tum.in.i22.uc.pdp.android.pdpService";
+	private static String pdpPackage = "de.tum.in.i22.uc.pdp.android";
+	private static String pdpClassFull = "de.tum.in.i22.uc.pdp.android.pdpService";
 	
 	public static Map<Integer, Set<String>> sourceSinkConnection = new HashMap<Integer, Set<String>>();
 	

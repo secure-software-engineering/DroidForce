@@ -149,8 +149,8 @@ public class Main {
 		// update javaclasses with targetPDP class if any was given.
 		if (Settings.pdpClass != null) {
 			
-			String targetPDPFullClass = Settings.pdpClass.split(":")[0];
-			String targetPDPpackage = Settings.pdpClass.split(":")[1].replaceAll("\\.[^\\.]*$", "");
+			String targetPDPFullClass = Settings.pdpClass.split(":")[1];
+			String targetPDPpackage = Settings.pdpClass.split(":")[0];
 			
 			SootClass sc = Scene.v().getSootClass(Settings.INSTRUMENTATION_HELPER_JAVA);
 			SootField sf1 = sc.getFieldByName("pdpPackage");

@@ -24,12 +24,15 @@ import soot.SootField;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
+import soot.Value;
 import soot.javaToJimple.LocalGenerator;
+import soot.jimple.AssignStmt;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
 import soot.jimple.NullConstant;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
+import soot.jimple.StringConstant;
 import soot.jimple.infoflow.android.axml.AXmlAttribute;
 import soot.jimple.infoflow.android.axml.AXmlHandler;
 import soot.jimple.infoflow.android.axml.AXmlNode;
@@ -182,18 +185,26 @@ public class Util {
 	}
 
 	public static void changeConstantStringInField(SootField sf,
-			String targetPDPpackage) {
-		StringConstantValueTag target = null;
-		for (Tag t: sf.getTags()) {
-			if (t instanceof StringConstantValueTag) {
-				target = (StringConstantValueTag)t;
-				break;
+			String newConstantString) {
+		SootClass sc = sf.getDeclaringClass();
+		SootMethod sm = sc.getMethodByName("<clinit>");
+		
+		boolean hasBeenUpdated = false;
+		for (Unit u: sm.retrieveActiveBody().getUnits()) {
+			if (u instanceof AssignStmt) {
+				AssignStmt ass = (AssignStmt)u;
+				Value lop = ass.getLeftOp();
+				if (lop.toString().equals(sf.toString())) {
+					System.out.println("previous string: "+ ass);
+					ass.setRightOp(StringConstant.v(newConstantString));
+					hasBeenUpdated = true;
+					System.out.println("updated string : "+ ass);
+				}
 			}
 		}
-		if (target == null)
+		
+		if (!hasBeenUpdated)
 			throw new RuntimeException("error: no StringConstant found for field "+ sf);
-		sf.getTags().remove(target);
-		sf.getTags().add(new StringConstantValueTag(Settings.pdpClass));
 		
 	}
 }
