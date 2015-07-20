@@ -1,18 +1,7 @@
 package de.ecspride;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Set;
-
-
-
-
-
-
-
-
-
-
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +10,8 @@ import soot.PackManager;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
-import soot.jimple.infoflow.IInfoflow.CallgraphAlgorithm;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.data.AndroidMethod;
-import soot.jimple.infoflow.cfg.BiDirICFGFactory;
-import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
-import soot.jimple.infoflow.solver.cfg.InfoflowCFG;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
@@ -109,14 +94,6 @@ public class Main {
 			System.exit(0);
 		}
 		
-		setupApp.setIcfgFactory(new BiDirICFGFactory() {
-			@Override
-			public IInfoflowCFG buildBiDirICFG(
-					CallgraphAlgorithm callgraphAlgorithm) {
-				return new InfoflowCFG();
-			}
-		});
-		
 		setupApp.setTaintWrapper(taintWrapper);
 		setupApp.setSootConfig(new ConfigForPolicyEnforcementPoint());
 		
@@ -136,8 +113,6 @@ public class Main {
 
 
 		// set Soot's output directory
-		File originalApkFile = new File(Settings.instance.apkFile);
-		String targetApk = Settings.sootOutput + File.separatorChar + originalApkFile.getName();
 		Options.v().set_output_dir(Settings.sootOutput);
 
 		// write output file (.class or .apk)
