@@ -1,0 +1,30 @@
+<?xml version='1.0' standalone='yes'?>
+<policy     
+    xmlns="http://www22.in.tum.de/enforcementLanguage"
+    xmlns:tns="http://www22.in.tum.de/enforcementLanguage" 
+    xmlns:a="http://www22.in.tum.de/action"
+    xmlns:e="http://www22.in.tum.de/event" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    
+    name="bliblablub">
+
+    <preventiveMechanism name="test2" >
+        <description>New Policy</description>
+        <timestep amount="3" unit="SECONDS" />
+        <trigger action="sentTextMessage" tryEvent="true" >
+            <paramMatch name="destination" value="12345" />
+        </trigger>
+        <condition>
+ 
+                    <eventMatch action="sentTextMessage" tryEvent="true" >
+                       <paramMatch name="DATA_UNIQUE_IDENTIFIER" value="true" />
+                    </eventMatch>
+
+        </condition>
+
+        <authorizationAction name="default" >
+            <inhibit />
+        </authorizationAction>
+    </preventiveMechanism>
+
+</policy>

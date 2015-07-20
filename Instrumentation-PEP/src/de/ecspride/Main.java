@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import soot.PackManager;
 import soot.Scene;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.data.AndroidMethod;
@@ -115,6 +116,22 @@ public class Main {
 		// set Soot's output directory
 		Options.v().set_output_dir(Settings.sootOutput);
 
+		// update javaclasses with targetPDP class if any was given.
+		if (Settings.pdpClass != null) {
+			
+			String targetPDPFullClass = Settings.pdpClass.split(":")[1];
+			String targetPDPpackage = Settings.pdpClass.split(":")[0];
+			
+			SootClass sc = Scene.v().getSootClass(Settings.INSTRUMENTATION_HELPER_JAVA);
+			SootField sf1 = sc.getFieldByName("pdpPackage");
+			Util.changeConstantStringInField(sf1, targetPDPpackage);
+			
+			SootField sf2 = sc.getFieldByName("pdpClassFull");
+			Util.changeConstantStringInField(sf2, targetPDPFullClass);
+			
+			log.info("updated fields for taget pdf: "+ targetPDPFullClass +" - "+ targetPDPpackage);
+		}
+					
 		// write output file (.class or .apk)
 		for (SootClass sc : Scene.v().getClasses())
 			for (SootMethod sm : sc.getMethods())

@@ -82,6 +82,8 @@ public class Settings {
 	public static boolean jimpleOutput = false;
 	
 	public static String sootOutput = null;
+	
+	public static String pdpClass = null;
 
 	//initialize soot
 	public void initialiseSoot(){
@@ -158,7 +160,8 @@ public class Settings {
 					+ "-taintWrapper </path/to/taintWrapper.txt>\n"
 					+ "-d enable debug\n"
 					+ "-j enable Jimple output\n" 
-					+ "-o output directory\n");
+					+ "-o output directory\n"
+					+ "-pdp a.b.c:a.b.c.PDPClass");
 			System.out.println(output.toString());
 		}
 		
@@ -207,6 +210,9 @@ public class Settings {
 					if (!f.exists())
 						f.mkdirs();
 					log.info("Soot output: "+ sootOutput);
+				} else if (args[i].equals("-pdp")) {
+					pdpClass = args[++i];
+					log.info("PDP target class: "+ pdpClass);
 				} else {
 					System.err.println("unknown option '"+ args[i] +"'");
 					printHelp();
@@ -225,6 +231,12 @@ public class Settings {
 			
 			if (sootOutput == null) {
 				System.err.println("Error: no output directory specified.");
+				printHelp();
+				System.exit(-1);
+			}
+			
+			if (pdpClass != null && !pdpClass.contains(":")) {
+				System.err.println("Error: wrong format for option -pdp '"+ pdpClass +"'");
 				printHelp();
 				System.exit(-1);
 			}
