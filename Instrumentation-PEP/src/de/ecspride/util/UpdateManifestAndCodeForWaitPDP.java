@@ -190,7 +190,7 @@ public class UpdateManifestAndCodeForWaitPDP {
 	 */
 	public static void addBackgroundFile(String originalApk) {
 		ClassLoader classLoader = UpdateManifestAndCodeForWaitPDP.class.getClassLoader();
-		URL fileURL = classLoader.getResource("/resources" + File.separatorChar + "protect.png");
+		URL fileURL = classLoader.getResource("/protect.png");
 		File background_picture = null;
 		if (fileURL != null)
 			background_picture = new File(fileURL.getPath());
