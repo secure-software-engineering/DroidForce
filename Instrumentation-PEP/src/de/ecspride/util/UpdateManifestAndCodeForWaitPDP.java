@@ -3,7 +3,10 @@ package de.ecspride.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 
@@ -189,26 +192,46 @@ public class UpdateManifestAndCodeForWaitPDP {
 	 * @param originalApk
 	 */
 	public static void addBackgroundFile(String originalApk) {
-		ClassLoader classLoader = UpdateManifestAndCodeForWaitPDP.class.getClassLoader();
-		URL fileURL = classLoader.getResource("/protect.png");
-		File background_picture = null;
-		if (fileURL != null)
-			background_picture = new File(fileURL.getPath());
-		if (background_picture == null || !background_picture.exists())
-			background_picture = new File("resources", "protect.png");
-		if (background_picture == null ||!background_picture.exists())
-			throw new RuntimeException("Background image file not found");
-		
-		File originalApkFile = new File(originalApk);
-		String targetApk = Settings.sootOutput + File.separatorChar + originalApkFile.getName();
+		File tempFile = null;
 		try {
-			ApkHandler apkH = new ApkHandler(targetApk);
-			apkH.addFilesToApk(Collections.singletonList(background_picture), Collections.singletonMap(background_picture.getPath(), "assets/protect.png"));
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("error when adding background image: "+ e);
+			File background_picture = new File("resources", "protect.png");
+			if (!background_picture.exists()) {
+				// Load the file from the JAR
+				URL fileURL = UpdateManifestAndCodeForWaitPDP.class.getResource("/protect.png");
+				
+				// Copy the file local
+				tempFile = File.createTempFile("droidForce", null);
+				InputStream is = fileURL.openStream();
+				try {
+					Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+					background_picture = tempFile;
+				}
+				finally {
+					is.close();
+				}
+			}
+			
+			// By now, we must have a file
+			if (background_picture == null ||!background_picture.exists())
+				throw new RuntimeException("Background image file not found");
+			
+			File originalApkFile = new File(originalApk);
+			String targetApk = Settings.sootOutput + File.separatorChar + originalApkFile.getName();
+			try {
+				ApkHandler apkH = new ApkHandler(targetApk);
+				apkH.addFilesToApk(Collections.singletonList(background_picture), Collections.singletonMap(background_picture.getPath(), "assets/protect.png"));
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new RuntimeException("error when adding background image: "+ e);
+			}
+		} catch (IOException ex) {
+			System.err.println("File handling failed: " + ex.getMessage());
+			ex.printStackTrace();
 		}
-		
+		finally {
+			if (tempFile != null)
+				tempFile.delete();
+		}
 	}
 
 
