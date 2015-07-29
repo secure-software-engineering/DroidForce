@@ -38,6 +38,7 @@
 	    
     	<jar destfile="${droidforce.jar}" manifest="META-INF/MANIFEST.MF">
             <fileset dir="build/classes"/>
+            <fileset dir="resources" />
         </jar>
 
 	</target>

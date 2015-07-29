@@ -150,7 +150,7 @@ public class Settings {
 	//prints out the different options for the instrumentation
 		public void printHelp(){
 			StringBuilder output = new StringBuilder();
-			output.append("\nUsage:  de.ecspride.runsecure.Main\n"
+			output.append("\nUsage:  de.ecspride.Main\n"
 					+ "-sourceFile </path/to/CategorizesSouceList> \n"
 					+ "-sinkFile </path/to/CategorizedSinkList> \n"
 					+ "-apkFile </path/to/file.apk> \n"

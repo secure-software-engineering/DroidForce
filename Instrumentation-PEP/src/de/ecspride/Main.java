@@ -66,7 +66,8 @@ public class Main {
 		sinks = sourcesSinks.getAndroidSinkMethods(Settings.instance.sinkFile);
 		
 		//get SetupApplication
-		SetupApplication setupApp = new SetupApplication(Settings.instance.androidPlatforms, Settings.instance.apkFile);
+		SetupApplication setupApp = new SetupApplication(Settings.instance.androidJar == null
+				? Settings.instance.androidPlatforms : Settings.instance.androidJar, Settings.instance.apkFile);
 		try{
 			//initialize SetupApplication
 			setupApp.calculateSourcesSinksEntrypoints(sources, sinks);
@@ -111,8 +112,10 @@ public class Main {
 				setupApp.getEntryPointCreator());
 		setupApp.runInfoflow(pep); 
 		
-
-
+		// Configure Soot for output writing
+		Settings.instance.addInstrumentedClassToApplicationClass();
+		Settings.instance.setDummyMainToLibraryClass();
+		
 		// set Soot's output directory
 		Options.v().set_output_dir(Settings.sootOutput);
 

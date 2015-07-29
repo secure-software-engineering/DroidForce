@@ -7,7 +7,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -29,21 +28,13 @@ import soot.javaToJimple.LocalGenerator;
 import soot.jimple.AssignStmt;
 import soot.jimple.InvokeStmt;
 import soot.jimple.Jimple;
-import soot.jimple.NullConstant;
 import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StaticInvokeExpr;
 import soot.jimple.StringConstant;
-import soot.jimple.infoflow.android.axml.AXmlAttribute;
-import soot.jimple.infoflow.android.axml.AXmlHandler;
-import soot.jimple.infoflow.android.axml.AXmlNode;
-import soot.jimple.infoflow.android.axml.ApkHandler;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
-import soot.tagkit.StringConstantValueTag;
-import soot.tagkit.Tag;
 import soot.util.EscapedWriter;
 import de.ecspride.Settings;
 import de.ecspride.instrumentation.Instrumentation;
-import de.ecspride.pep.PolicyEnforcementPoint;
 
 /**
  * Different util methods which do not fit into the transformer class (PolicyEnforcementTransformer).

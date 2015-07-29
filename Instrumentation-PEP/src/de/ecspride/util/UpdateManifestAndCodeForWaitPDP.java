@@ -1,43 +1,26 @@
 package de.ecspride.util;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 
 import org.xmlpull.v1.XmlPullParserException;
 
 import soot.Body;
-import soot.IntType;
-import soot.Local;
-import soot.Modifier;
 import soot.Scene;
 import soot.SootClass;
-import soot.SootField;
 import soot.SootMethod;
 import soot.Unit;
-import soot.Value;
 import soot.jimple.AssignStmt;
-import soot.jimple.IntConstant;
-import soot.jimple.InvokeExpr;
-import soot.jimple.InvokeStmt;
-import soot.jimple.Jimple;
-import soot.jimple.SpecialInvokeExpr;
 import soot.jimple.StringConstant;
 import soot.jimple.infoflow.android.axml.AXmlAttribute;
 import soot.jimple.infoflow.android.axml.AXmlHandler;
 import soot.jimple.infoflow.android.axml.AXmlNode;
 import soot.jimple.infoflow.android.axml.ApkHandler;
 import soot.jimple.infoflow.android.manifest.ProcessManifest;
-import soot.tagkit.ConstantValueTag;
-import soot.tagkit.IntegerConstantValueTag;
-import soot.tagkit.Tag;
 import de.ecspride.Settings;
 
 /**
@@ -207,8 +190,15 @@ public class UpdateManifestAndCodeForWaitPDP {
 	 */
 	public static void addBackgroundFile(String originalApk) {
 		ClassLoader classLoader = UpdateManifestAndCodeForWaitPDP.class.getClassLoader();
-		URL fileURL = classLoader.getResource("resources" + File.separatorChar + "protect.png");
-		File background_picture = new File(fileURL.getPath());
+		URL fileURL = classLoader.getResource("/resources" + File.separatorChar + "protect.png");
+		File background_picture = null;
+		if (fileURL != null)
+			background_picture = new File(fileURL.getPath());
+		if (background_picture == null || !background_picture.exists())
+			background_picture = new File("resources", "protect.png");
+		if (background_picture == null ||!background_picture.exists())
+			throw new RuntimeException("Background image file not found");
+		
 		File originalApkFile = new File(originalApk);
 		String targetApk = Settings.sootOutput + File.separatorChar + originalApkFile.getName();
 		try {
