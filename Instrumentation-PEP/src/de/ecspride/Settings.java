@@ -1,6 +1,7 @@
 package de.ecspride;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Collections;
 
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class Settings {
 	public static Settings instance = new Settings();
 	
 	//bin folder for the java classes that will be added to the apk
-	public final String bin = "./bin/";
+	public final String bin = getCodeLocation();
 	
 	//information about all events (method signatrues) we do care
 	public final static String eventInformationFile = "./files/eventInformation.xml";	
@@ -113,12 +114,23 @@ public class Settings {
 		
 		//the bin folder has to be added to the classpath in order to
 		//use the Java part for the instrumentation (JavaClassForInstrumentation)
-		Options.v().set_soot_classpath(instance.bin + File.pathSeparator + instance.androidJar);
+		Options.v().set_soot_classpath(instance.bin
+				+ File.pathSeparator + instance.androidJar);
 		initialiseInstrumentationClasses();
 		Scene.v().loadNecessaryClasses();
 		addInstrumentedClassToApplicationClass();
 	}
 	
+	private String getCodeLocation() {
+		try {
+			String path = Settings.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+			System.out.println("Code loaded from " + path);
+			return path;
+		} catch (URISyntaxException e) {
+			return "./bin/";
+		}
+	}
+
 	/**
 	 * Add all java-classes to the basic classes with the BODIES settings, since they will be
 	 * set as application class in addInstrumentedClassToApplicationClass()
