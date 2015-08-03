@@ -8,7 +8,6 @@ import java.util.Set;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
