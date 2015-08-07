@@ -11,6 +11,7 @@ import soot.Scene;
 import soot.SootClass;
 import soot.SootField;
 import soot.SootMethod;
+import soot.jimple.infoflow.InfoflowConfiguration;
 import soot.jimple.infoflow.android.SetupApplication;
 import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
@@ -100,10 +101,10 @@ public class Main {
 		setupApp.setSootConfig(new ConfigForPolicyEnforcementPoint());
 		
 		//settings
-		setupApp.setEnableStaticFieldTracking(false);
-		setupApp.setFlowSensitiveAliasing(false);
-		setupApp.setAccessPathLength(1);
-		setupApp.setEnableImplicitFlows(false); // TODO: add an option for this
+		setupApp.getConfig().setEnableStaticFieldTracking(false);
+		setupApp.getConfig().setFlowSensitiveAliasing(false);
+		setupApp.getConfig().setEnableImplicitFlows(false); // TODO: add an option for this
+		InfoflowConfiguration.setAccessPathLength(1);
 		
 		PolicyEnforcementPoint pep = new PolicyEnforcementPoint(
 				eventInformation,
