@@ -58,7 +58,7 @@ public class Main {
 			}
 			log.debug("");
 		}
-		
+			
 		SourcesSinks sourcesSinks = new SourcesSinks();
 		//get Android sources
 		sources = sourcesSinks.getAndroidSourcesMethods(Settings.instance.sourceFile);
@@ -137,10 +137,13 @@ public class Main {
 		}
 					
 		// write output file (.class or .apk)
-		for (SootClass sc : Scene.v().getClasses())
-			for (SootMethod sm : sc.getMethods())
-				if (sm.hasActiveBody())
+		for (SootClass sc : Scene.v().getClasses()) {
+			for (SootMethod sm : sc.getMethods()) {
+				if (sm.hasActiveBody()) {
 					sm.getActiveBody().validate();
+				}
+			}
+		}
 		PackManager.v().writeOutput();
 
 		// update manifest
@@ -159,6 +162,8 @@ public class Main {
 					System.out.println("m: "+ sm);
 					if (null == sm.getSource()) {
 						System.out.println("no source!");
+					} else {
+						System.out.println("source: "+ sm.getSource());
 					}
 					System.out.println(sm.retrieveActiveBody());
 				}

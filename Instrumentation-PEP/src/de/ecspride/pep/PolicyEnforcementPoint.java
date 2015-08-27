@@ -192,9 +192,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 									}
 																			
 									if(sink != null){
+										log.debug("instrument with data flow information )" + s + ")");
 										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
 										instrumentSourceToSinkConnections(cfg, sink, s instanceof AssignStmt);
 									} else {
+										log.debug("instrument without data flow information (" + s + ")");
 										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
 									}
 								}
