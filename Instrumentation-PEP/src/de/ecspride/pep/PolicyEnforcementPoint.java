@@ -2,6 +2,7 @@ package de.ecspride.pep;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -193,8 +194,8 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 																			
 									if(sink != null){
 										log.debug("instrument with data flow information )" + s + ")");
-										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
 										instrumentSourceToSinkConnections(cfg, sink, s instanceof AssignStmt);
+										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
 									} else {
 										log.debug("instrument without data flow information (" + s + ")");
 										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
@@ -243,13 +244,15 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 			
 			//get Intent
 			Value intent = sinkExpr.getArg(0);
-			
+			List<Object> args = new ArrayList<Object>();
+			args.add(RefType.v("android.content.Intent"));
+			args.add(intent);
+			args.add(RefType.v(hashSetType));
+			args.add(hashSetLocal);
 			StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
 					Settings.INSTRUMENTATION_HELPER_JAVA,
 					"addTaintInformationToIntent",
-					RefType.v("android.content.Intent"),
-					intent,
-					RefType.v(hashSetType), hashSetLocal);
+					args);
 			InvokeStmt invStmt = Jimple.v().newInvokeStmt(sie);
 			generated.add(invStmt);
 			
@@ -299,13 +302,15 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 								Value leftValue = defStmt.getLeftOp();
 								
 								if (leftValue.getType().equals(RefType.v("android.os.Bundle"))) {
+									List<Object> args = new ArrayList<Object>();
+									args.add(IntType.v());
+									args.add(IntConstant.v(sourceSinkConnectionCounter));
+									args.add(RefType.v("android.os.Bundle"));
+									args.add(leftValue);
 									InvokeExpr invExpr = Instrumentation.createJimpleStaticInvokeExpr(
 											Settings.INSTRUMENTATION_HELPER_JAVA,
 											"registerNewSourceSinkConnection",
-											IntType.v(),
-											IntConstant.v(sourceSinkConnectionCounter),
-											RefType.v("android.os.Bundle"),
-											leftValue);
+											args);
 									InvokeStmt invStmt = Jimple.v().newInvokeStmt(invExpr);
 									
 									Unit instrumentationPoint = null;
@@ -325,13 +330,15 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 
 						String sourceCat = getSourceCategory(si);
 						if(sourceCat != null){
+							List<Object> args = new ArrayList<Object>();
+							args.add(IntType.v());
+							args.add(IntConstant.v(sourceSinkConnectionCounter));
+							args.add(RefType.v("java.lang.String"));
+							args.add(StringConstant.v(sourceCat));
 							InvokeExpr invExpr = Instrumentation.createJimpleStaticInvokeExpr(
 									Settings.INSTRUMENTATION_HELPER_JAVA,
 									"registerNewSourceSinkConnection",
-									IntType.v(),
-									IntConstant.v(sourceSinkConnectionCounter),
-									RefType.v("java.lang.String"),
-									StringConstant.v(sourceCat));
+									args);
 							InvokeStmt invStmt = Jimple.v().newInvokeStmt(invExpr);
 							
 							Unit instrumentationPoint = null;
@@ -351,7 +358,8 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						List<Unit> generated = new ArrayList<Unit>();
 						generated.addAll(instrumentIntentAddings(cfg, stmt, invExpr, result.getValue()));
 						
-						EventInformation eventInfo = allEventInformation.get(invExpr.getMethod().getSignature());
+						EventInformation sinkEventInfo = allEventInformation.get(invExpr.getMethod().getSignature());
+						EventInformation sourceEventInfo = allEventInformation.get(si.getSource().getInvokeExpr().getMethod().getSignature());
 						
 						generated.addAll(generatePolicyEnforcementPoint(result.getKey().getSink(), invExpr,
 								bodyOfSink, sourceSinkConnectionCounter, assignmentStatement));
@@ -361,7 +369,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 							log.debug("gen: "+ u);
 						}
 						
-						if(eventInfo.isInstrumentAfterStatement())
+						if(sinkEventInfo.isInstrumentAfterStatement())
 							bodyOfSink.getUnits().insertAfter(generated, result.getKey().getSink());
 						else
 							bodyOfSink.getUnits().insertBefore(generated, result.getKey().getSink());
@@ -435,6 +443,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		// java.lang.Object[] "parameters"
 		// 
 		List<Object> parameterForHelperMethod = new ArrayList<Object>();
+		List<Object> categories = new ArrayList<Object>();
 		
 		// add event name information
 		Type eventNameType = RefType.v("java.lang.String");
@@ -470,11 +479,16 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
 				Settings.INSTRUMENTATION_HELPER_JAVA, 
 				"isStmtExecutionAllowed", 
-				parameterForHelperMethod.toArray());
+				parameterForHelperMethod
+				);
 		
 		Local resultPDPLocal = generateFreshLocal(body, soot.IntType.v());
 		AssignStmt asssCondition = Jimple.v().newAssignStmt(resultPDPLocal, sie);
 		generated.add(asssCondition);
+		
+		for (Unit u: generated) {
+			System.out.println("isStmt gen: "+ u);
+		}
 		
 		
 		if(assignmentStatement){
@@ -821,42 +835,42 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		if(local.getType() instanceof PrimType){
 			if(local.getType() instanceof IntType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyInteger");
+						Settings.SANITIZER, "dummyInteger", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof BooleanType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyBoolean");
+						Settings.SANITIZER, "dummyBoolean", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof ByteType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyByte");
+						Settings.SANITIZER, "dummyByte", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof CharType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyCharacter");
+						Settings.SANITIZER, "dummyCharacter", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof DoubleType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyDouble");
+						Settings.SANITIZER, "dummyDouble", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof FloatType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyFloat");
+						Settings.SANITIZER, "dummyFloat", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof LongType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyLong");
+						Settings.SANITIZER, "dummyLong", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else if(local.getType() instanceof ShortType){
 				StaticInvokeExpr sie = Instrumentation.createJimpleStaticInvokeExpr(
-						Settings.SANITIZER, "dummyShort");
+						Settings.SANITIZER, "dummyShort", null);
 				dummyAssignemnt = Jimple.v().newAssignStmt(local, sie);
 			}
 			else
