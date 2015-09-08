@@ -87,8 +87,8 @@ public class InstrumentationHelper {
 				for(String cat : sourceSinkConnection.get(dataFlowAvailable))
 					event.putString("DATA_" + cat, "true");
 			}
-			Log.i("PEP", "event: "+ event.toString());
 		}
+		Log.i("PEP", "event: "+ event.toString());
 
 		return InstrumentationHelper.eventPep.isStmtExecutionAllowed(event);
 	}
