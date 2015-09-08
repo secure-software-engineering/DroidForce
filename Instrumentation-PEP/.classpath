@@ -3,8 +3,11 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry kind="lib" path="libs/android.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/soot"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/soot-infoflow"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/soot-infoflow-android"/>
+	<classpathentry kind="lib" path="libs/axml-2.0.jar"/>
+	<classpathentry kind="lib" path="libs/slf4j-api-1.7.5.jar"/>
+	<classpathentry kind="lib" path="libs/slf4j-simple-1.7.5.jar"/>
+	<classpathentry kind="lib" path="libs/soot-infoflow-android.jar"/>
+	<classpathentry kind="lib" path="libs/soot-infoflow.jar"/>
+	<classpathentry kind="lib" path="libs/soot-trunk.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

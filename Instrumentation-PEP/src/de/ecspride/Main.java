@@ -6,6 +6,13 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.ecspride.events.EventInformation;
+import de.ecspride.events.EventInformationParser;
+import de.ecspride.pep.ConfigForPolicyEnforcementPoint;
+import de.ecspride.pep.PolicyEnforcementPoint;
+import de.ecspride.util.SourcesSinks;
+import de.ecspride.util.UpdateManifestAndCodeForWaitPDP;
+import de.ecspride.util.Util;
 import soot.PackManager;
 import soot.Scene;
 import soot.SootClass;
@@ -17,13 +24,6 @@ import soot.jimple.infoflow.android.data.AndroidMethod;
 import soot.jimple.infoflow.taintWrappers.EasyTaintWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.options.Options;
-import de.ecspride.events.EventInformation;
-import de.ecspride.events.EventInformationParser;
-import de.ecspride.pep.ConfigForPolicyEnforcementPoint;
-import de.ecspride.pep.PolicyEnforcementPoint;
-import de.ecspride.util.SourcesSinks;
-import de.ecspride.util.UpdateManifestAndCodeForWaitPDP;
-import de.ecspride.util.Util;
 
 public class Main {
 	public static Logger log = LoggerFactory.getLogger(Main.class);
@@ -156,6 +156,7 @@ public class Main {
 
 		log.info("output jimple files:");
 		for (SootClass sc: Scene.v().getApplicationClasses()) {
+			Util.writeJimpleFiles(sc);
 			log.debug("application class: "+ sc);
 			for (SootMethod sm: sc.getMethods()) {
 				if (sm.isConcrete() && !sm.toString().contains("de.ecspride.javaclasses")) {
