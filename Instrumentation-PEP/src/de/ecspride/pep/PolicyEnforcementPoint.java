@@ -62,6 +62,7 @@ import soot.jimple.infoflow.results.ResultSinkInfo;
 import soot.jimple.infoflow.results.ResultSourceInfo;
 import soot.jimple.infoflow.solver.cfg.IInfoflowCFG;
 import soot.jimple.toolkits.ide.icfg.BiDiInterproceduralCFG;
+import soot.util.MultiMap;
 import de.ecspride.Main;
 import de.ecspride.Settings;
 import de.ecspride.events.EventInformation;
@@ -113,7 +114,7 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		if (log.isDebugEnabled()) {
 			log.debug("");
 			log.debug("InfoFlow Results");
-			Map<ResultSinkInfo, Set<ResultSourceInfo>> r = results.getResults();
+			MultiMap<ResultSinkInfo, ResultSourceInfo> r = results.getResults();
 			for (ResultSinkInfo k : r.keySet()) {
 				log.debug("ResultSinkInfo: "+ k);
 
@@ -177,15 +178,15 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 									ResultSinkInfo sink = null;
 									
 									outer:
-									for(Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()){
+									for (ResultSinkInfo key : results.getResults().keySet()) {
 
 										// iterate over all the arguments of the invoke expression
 										// and check if an argument is a tainted sink. If one is
 										// set variable 'sink' to the ResultSinkInfo key.
 										for (Value v : invExpr.getArgs()) {
-											Value pathValue = result.getKey().getAccessPath().getPlainValue();
+											Value pathValue = key.getAccessPath().getPlainValue();
 											if (v == pathValue) {
-												sink = result.getKey();
+												sink = key;
 												log.debug("found a sink: "+ pathValue);
 												break outer;
 											}
@@ -271,16 +272,16 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		sourceSinkConnectionCounter += 1;
 		
 		// loop through the sinks
-		for (Map.Entry<ResultSinkInfo, Set<ResultSourceInfo>> result : results.getResults().entrySet()) {
+		for (ResultSinkInfo key : results.getResults().keySet()) {
 			
-			log.debug("compare: "+ result.getKey());
+			log.debug("compare: "+ key);
 			log.debug("     to: "+ sink);
 			
 			// if the current sink is the sink at the unit tagged with 'sink'
-			if(result.getKey().equals(sink)){
+			if(key.equals(sink)){
 				
 				// loop through the sources
-				for(ResultSourceInfo si : result.getValue()){
+				for(ResultSourceInfo si : results.getResults().get(key)){
 					
 					Stmt stmt = si.getSource();
 					SootMethod sm = cfg.getMethodOf(stmt);
@@ -353,15 +354,15 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 					
 					// sink instrumentation
 					if(sink.getSink().containsInvokeExpr()){	
-						Body bodyOfSink = cfg.getMethodOf(result.getKey().getSink()).getActiveBody();
+						Body bodyOfSink = cfg.getMethodOf(key.getSink()).getActiveBody();
 						InvokeExpr invExpr = sink.getSink().getInvokeExpr();
 						List<Unit> generated = new ArrayList<Unit>();
-						generated.addAll(instrumentIntentAddings(cfg, stmt, invExpr, result.getValue()));
+						generated.addAll(instrumentIntentAddings(cfg, stmt, invExpr, results.getResults().get(key)));
 						
 						EventInformation sinkEventInfo = allEventInformation.get(invExpr.getMethod().getSignature());
 						EventInformation sourceEventInfo = allEventInformation.get(si.getSource().getInvokeExpr().getMethod().getSignature());
 						
-						generated.addAll(generatePolicyEnforcementPoint(result.getKey().getSink(), invExpr,
+						generated.addAll(generatePolicyEnforcementPoint(key.getSink(), invExpr,
 								bodyOfSink, sourceSinkConnectionCounter, assignmentStatement));
 						
 						log.debug("body with data flow:\n"+body);
@@ -370,9 +371,9 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						}
 						
 						if(sinkEventInfo.isInstrumentAfterStatement())
-							bodyOfSink.getUnits().insertAfter(generated, result.getKey().getSink());
+							bodyOfSink.getUnits().insertAfter(generated, key.getSink());
 						else
-							bodyOfSink.getUnits().insertBefore(generated, result.getKey().getSink());
+							bodyOfSink.getUnits().insertBefore(generated, key.getSink());
 					}
 					else
 						throw new RuntimeException("Double-Check the assumption");
