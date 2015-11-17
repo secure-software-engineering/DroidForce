@@ -1,0 +1,11 @@
+
+Failure [INSTALL_FAILED_DEXOPT]
+FAILED_DEX_OPT problem: 
+
+There is a bug in Android 5.1.1
+Abort message: 'art/compiler/dex/quick/x86/utility_x86.cc:491] Bad case in OpRegRegReg OpMul'
+
+see:
+https://code.google.com/p/android/issues/detail?id=160717
+https://android-review.googlesource.com/#/c/114932/
+

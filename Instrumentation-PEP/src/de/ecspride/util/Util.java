@@ -141,11 +141,11 @@ public class Util {
 			Local applicationContextLocal = generateFreshLocal(body, RefType.v("android.content.Context"));
 			generated.add(Jimple.v().newAssignStmt(applicationContextLocal, virtInvExpr));
 			
-			Object[] typeAndArgument = new Object[2];
-			typeAndArgument[0] = RefType.v("android.content.Context");
-			typeAndArgument[1] = applicationContextLocal;
+			List<Object> args = new ArrayList<Object>();
+			args.add(RefType.v("android.content.Context"));
+			args.add(applicationContextLocal);
 			
-			StaticInvokeExpr staticInvExpr = Instrumentation.createJimpleStaticInvokeExpr(Settings.instance.INSTRUMENTATION_HELPER_JAVA, Settings.instance.INSTRUMENTATION_HELPER_INITIALIZE_METHOD, typeAndArgument);
+			StaticInvokeExpr staticInvExpr = Instrumentation.createJimpleStaticInvokeExpr(Settings.instance.INSTRUMENTATION_HELPER_JAVA, Settings.instance.INSTRUMENTATION_HELPER_INITIALIZE_METHOD, args);
 			generated.add(Jimple.v().newInvokeStmt(staticInvExpr));
 			
 			Unit onCreateSpecialInvoke = getSuperOnCreateUnit(body);

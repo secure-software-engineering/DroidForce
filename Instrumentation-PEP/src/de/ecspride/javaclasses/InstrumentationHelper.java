@@ -41,7 +41,7 @@ public class InstrumentationHelper {
 	    context.bindService(intent, connection, Context.BIND_AUTO_CREATE);
 	}
 	
-	public static boolean isStmtExecutionAllowed(String eventName, int dataFlowAvailable, Object... parameter){
+	public static boolean isStmtExecutionAllowed(String eventName, int dataFlowAvailable, Object[] parameter){
 		Log.i("PEP", "in InstrumentationHelper.isStmtExecutionAllowed");
 		
 		if (eventName == null) {
@@ -60,19 +60,35 @@ public class InstrumentationHelper {
 		if(parameter.length%2 != 0)
 			throw new RuntimeException("Ooops problem in isStmtExecutionAllowed");
 		for(int i = 0; i < parameter.length; i++){
-			event.putString(parameter[i].toString(), parameter[++i].toString());
+			String paramName = parameter[i].toString();
+			String paramValue = parameter[++i].toString();
+			event.putString(paramName, paramValue);
 		}
+		
+//		for (Object paramName: categories.keySet()) {
+//			String category = categories.get(paramName).toString();
+//			if (category == "") {
+//				// do nothing since there is no dataflow information
+//			} else {
+//				event.putString(paramName +"|DATA_" + category, "true");
+//			}
+//		}
 		
 		if(dataFlowAvailable != -1){
 			Log.i("PEP", "dataFlowAvailable="+dataFlowAvailable);
 			Log.i("PEP", sourceSinkConnection.toString());
 //			if(!sourceSinkConnection.containsKey(dataFlowAvailable))
 //				throw new RuntimeException("Oops, there should be a correct ID");
-			if(sourceSinkConnection.containsKey(dataFlowAvailable)){
+			Log.i("PEP", "sourceSinkConnection:");
+			for (Integer k: sourceSinkConnection.keySet()) {
+				Log.i("PEP", "   key: "+ k);
+			}
+			if(sourceSinkConnection.containsKey(dataFlowAvailable)) {
 				for(String cat : sourceSinkConnection.get(dataFlowAvailable))
 					event.putString("DATA_" + cat, "true");
 			}
 		}
+		Log.i("PEP", "event: "+ event.toString());
 
 		return InstrumentationHelper.eventPep.isStmtExecutionAllowed(event);
 	}
@@ -86,6 +102,8 @@ public class InstrumentationHelper {
 	
 	public static void addTaintInformationToIntent(Intent i, HashSet<String> taintCategories){
 		boolean intentHasNoExtras= i.getExtras() == null ? true : false;
+		
+		Log.i("PEP", "in addTaintInformationToIntent(Intent i, HashSet<String> taintCategories)");
 		
 		//A bit of limitation here, because we do only care about the extras
 		if(!intentHasNoExtras){
@@ -125,14 +143,18 @@ public class InstrumentationHelper {
 	}
 	
 	public static void registerNewSourceSinkConnection(int counter, String taintInfoOfSource){
-		Log.i("PEP", "in registerNewSourceSinkConnection(int counter, String taintInfoOfSource)");
+		Log.i("PEP", "in registerNewSourceSinkConnection(int counter, String taintInfoOfSource)"
+				+ counter + " " 
+				+ taintInfoOfSource);
 		Set<String> taintInfos = new HashSet<String>();
 		taintInfos.add(taintInfoOfSource);
 		sourceSinkConnection.put(counter, taintInfos);
 	}
 	
 	public static void registerNewSourceSinkConnection(int counter, Bundle bundle){
-		Log.i("PEP", "in registerNewSourceSinkConnection(int counter, Bundle bundle)");
+		Log.i("PEP", "in registerNewSourceSinkConnection(int counter, Bundle bundle)"
+				+ counter +" "
+				+ bundle.toString());
 		int taintInfoKeyCounter = 0;
 		
 		if(bundle != null){
