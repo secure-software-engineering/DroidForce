@@ -131,8 +131,8 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		log.info("Adding code to initialize PEPs.");
 		Util.initializePePInAllPossibleClasses(Settings.instance.getApkPath());
 		
-		log.info("Redirect main activity");
-		String mainActivityClass = UpdateManifestAndCodeForWaitPDP.redirectMainActivity(Settings.instance.getApkPath());
+		log.info("Build code for new 'WaitPDPActivity"); // building the code has to be done here (not in the Main class, otherwise Jimple validation will fail
+		String mainActivityClass = UpdateManifestAndCodeForWaitPDP.getMainActivityName(Settings.instance.getApkPath());
 		UpdateManifestAndCodeForWaitPDP.updateWaitPDPActivity(mainActivityClass);
 		
 		log.info("Adding Policy Enforcement Points (PEPs).");

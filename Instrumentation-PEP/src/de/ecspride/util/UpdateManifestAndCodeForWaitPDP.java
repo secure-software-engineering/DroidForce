@@ -39,11 +39,11 @@ public class UpdateManifestAndCodeForWaitPDP {
 	
 	
 	/**
-	 * 
+	 * Get the name of the main activity in the AndroidManifest.xml file
 	 * @param apkFileLocation
 	 * @return
 	 */
-	public static String redirectMainActivity(String apkFileLocation){
+	public static String getMainActivityName(String apkFileLocation) {
 		String mainActivityName = null;
 		try {
 			ProcessManifest pm = new ProcessManifest(apkFileLocation);
@@ -104,6 +104,24 @@ public class UpdateManifestAndCodeForWaitPDP {
 				}
 				
 			}
+		} catch (IOException | XmlPullParserException ex) {
+			System.err.println("Could not read Android manifest file: " + ex.getMessage());
+			throw new RuntimeException(ex);
+		}
+
+		return mainActivityName;
+	}
+
+	/**
+	 * Redirect the main activity in the AndroidManifiest.xml file
+	 * @param apkFileLocation
+	 * @return
+	 */
+	public static void redirectMainActivity(String apkFileLocation){
+
+		try {
+			ProcessManifest pm = new ProcessManifest(apkFileLocation);
+			AXmlHandler axmlh = pm.getAXml();
 			
 			// add new 'main' intent-filter for our activity that waits for a pdp connection
 			axmlh.getDocument().getRootNode();
@@ -143,7 +161,6 @@ public class UpdateManifestAndCodeForWaitPDP {
 			throw new RuntimeException(ex);
 		}
 		
-		return mainActivityName;
 	
 	}
 	

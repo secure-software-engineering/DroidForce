@@ -113,6 +113,9 @@ public class Main {
 				setupApp.getEntryPointCreator());
 		setupApp.runInfoflow(pep); 
 		
+		log.info("Wrap main activity in the manifest");
+		UpdateManifestAndCodeForWaitPDP.redirectMainActivity(Settings.instance.getApkPath());
+
 		// Configure Soot for output writing
 		Settings.instance.addInstrumentedClassToApplicationClass();
 		Settings.instance.setDummyMainToLibraryClass();
