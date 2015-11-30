@@ -359,6 +359,14 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 						generated.addAll(instrumentIntentAddings(cfg, stmt, invExpr, results.getResults().get(key)));
 						
 						EventInformation sinkEventInfo = allEventInformation.get(invExpr.getMethod().getSignature());
+
+						// TODO: write code to handle cases where Intent is given as a parameter to a component method
+						// such as Service.onStartCommand(Intent i, ...)
+						if (!si.getSource().containsInvokeExpr()) {
+							System.out.println("WARNING: skipping source with no invoke expression: "+ si.getSource());
+							continue; // next source
+						}
+
 						EventInformation sourceEventInfo = allEventInformation.get(si.getSource().getInvokeExpr().getMethod().getSignature());
 						
 						generated.addAll(generatePolicyEnforcementPoint(key.getSink(), invExpr,
