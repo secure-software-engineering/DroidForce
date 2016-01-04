@@ -170,10 +170,16 @@ public class Settings {
 					+ "-androidJar </path/to/android.jar>\n"
 					/* + "-instrumentationType [hybrid|complete]\n" */
 					+ "-taintWrapper </path/to/taintWrapper.txt>\n"
-					+ "-d enable debug\n"
 					+ "-j enable Jimple output\n" 
 					+ "-o output directory\n"
-					+ "-pdp a.b.c:a.b.c.PDPClass");
+					+ "-pdp a.b.c:a.b.c.PDPClass\n"
+					+ "\n"
+					+ "\n"
+					+ "Debug: to enable debug/warning/... output level define slf4j parameters such as: \n"
+					+ "  -Dorg.slf4j.simpleLogger.defaultLogLevel=DEBUG\n"
+					+ "See http://www.slf4j.org/api/org/apache/log4j/Level.html for the available levels."
+					+"\n"
+					);
 			System.out.println(output.toString());
 		}
 		
