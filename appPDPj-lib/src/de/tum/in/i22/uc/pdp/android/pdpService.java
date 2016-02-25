@@ -227,9 +227,15 @@ public class pdpService extends Service
        */
 
       Log.d(TAG, "pdpService received message: " + counter);
-      lpdp=PolicyDecisionPoint.getInstance();
+      lpdp = PolicyDecisionPoint.getInstance();
 
       Event event=reconstructEvent(msg.getData().getString("eventname"), msg);
+      if (msg.getData().containsKey("APP_PACKAGE_NAME")) {
+    	  String app_package_name = (String) msg.getData().getString("APP_PACKAGE_NAME");
+    	  Log.d(TAG, "application package name: "+ app_package_name);
+      } else {
+    	  Log.e(TAG, "no package name information in event message!!!");
+      }
 
       Decision d=lpdp.notifyEvent(event);
 
