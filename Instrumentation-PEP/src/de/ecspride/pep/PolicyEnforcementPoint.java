@@ -159,52 +159,62 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 			for(SootMethod sm : sc.getMethods()){
 				if(sm.isConcrete()){
 					Body body = sm.retrieveActiveBody();
+					
 					// only instrument application methods (i.e., not methods declared in PEP helper classes
 					// or in a Java library classes or in an Android classes, ...)
-					if(isInstrumentationNecessary(sm)){
-					
-						// important to use snapshotIterator here
-						Iterator<Unit> i = body.getUnits().snapshotIterator();						
-						log.debug("method: "+ sm);
-						while(i.hasNext()){
-							Stmt s = (Stmt) i.next();
-							
-							if(s.containsInvokeExpr()) {
-								InvokeExpr invExpr = s.getInvokeExpr();
-								String methodSignature = invExpr.getMethod().getSignature();
-								
-								if(allEventInformation.containsKey(methodSignature)){
-									log.debug("statement "+ s +" matches "+ methodSignature +".");
-									ResultSinkInfo sink = null;
-									
-									outer:
-									for (ResultSinkInfo key : results.getResults().keySet()) {
+					if(!isInstrumentationNecessary(sm)) {
+						continue;
+					}
 
-										// iterate over all the arguments of the invoke expression
-										// and check if an argument is a tainted sink. If one is
-										// set variable 'sink' to the ResultSinkInfo key.
-										for (Value v : invExpr.getArgs()) {
-											Value pathValue = key.getAccessPath().getPlainValue();
-											if (v == pathValue) {
-												sink = key;
-												log.debug("found a sink: "+ pathValue);
-												break outer;
-											}
-										}
-									}
-																			
-									if(sink != null){
-										log.debug("instrument with data flow information )" + s + ")");
-										instrumentSourceToSinkConnections(cfg, sink, s instanceof AssignStmt);
-										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
-									} else {
-										log.debug("instrument without data flow information (" + s + ")");
-										instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
+					// important to use snapshotIterator here
+					Iterator<Unit> i = body.getUnits().snapshotIterator();						
+					log.debug("method: "+ sm);
+					while(i.hasNext()){
+						Stmt s = (Stmt) i.next();
+
+						// only instrument invoke expressions
+						if (!s.containsInvokeExpr()) {
+							continue;
+						}
+						
+						InvokeExpr invExpr = s.getInvokeExpr();
+						String methodSignature = invExpr.getMethod().getSignature();
+
+						if(!allEventInformation.containsKey(methodSignature)) {
+							continue;
+						}
+						
+						log.debug("statement "+ s +" matches "+ methodSignature +".");
+						ResultSinkInfo sink = null;
+
+						outer:
+							for (ResultSinkInfo key : results.getResults().keySet()) {
+
+								// iterate over all the arguments of the invoke expression
+								// and check if an argument is a tainted sink. If one is
+								// set variable 'sink' to the ResultSinkInfo key.
+								for (Value v : invExpr.getArgs()) {
+									Value pathValue = key.getAccessPath().getPlainValue();
+									if (v == pathValue) {
+										sink = key;
+										log.debug("found a sink: "+ pathValue);
+										break outer;
 									}
 								}
-							} // if stmt containts invoke expression
-						} // loop on statements
-					}
+							}
+
+						if(sink != null){
+							log.debug("instrument with data flow information )" + s + ")");
+							instrumentSourceToSinkConnections(cfg, sink, s instanceof AssignStmt);
+							instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
+						} else {
+							log.debug("instrument without data flow information (" + s + ")");
+							instrumentWithNoDataFlowInformation(methodSignature, s, invExpr, body, s instanceof AssignStmt);
+						}
+
+
+					} // loop on statements
+
 				}
 			}
 		}
