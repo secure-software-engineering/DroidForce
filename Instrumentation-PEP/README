@@ -9,3 +9,9 @@ see:
 https://code.google.com/p/android/issues/detail?id=160717
 https://android-review.googlesource.com/#/c/114932/
 
+-----
+
+Create a Jar from Eclipse:
+1) add resources/protect.png in the resulting jar
+2) add android-infoflow's AndroidCallbacks.txt in the directory containing the jar
+
