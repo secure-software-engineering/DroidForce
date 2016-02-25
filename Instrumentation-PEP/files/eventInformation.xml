@@ -88,6 +88,15 @@
 			<param pos="2" name="message" />
 		</data>
 	</event>
+
+  <event methodSignature="&lt;android.telephony.SmsManager: void sendMultipartTextMessage(java.lang.String,java.lang.String,java.util.ArrayList,java.util.ArrayList,java.util.ArrayList)&gt;">
+		<eventname name="sentTextMessage" />
+		<instrumentationpos>before</instrumentationpos>
+		<data>
+			<param pos="0" name="destination" />
+			<param pos="2" name="message" />
+		</data>
+	</event>
 	
 	<event methodSignature="&lt;java.net.URL: java.net.URLConnection openConnection()&gt;">
 		<eventname name="internet" />
