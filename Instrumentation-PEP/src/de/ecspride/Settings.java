@@ -26,7 +26,7 @@ public class Settings {
 	public final String bin = getCodeLocation();
 	
 	//information about all events (method signatrues) we do care
-	public final static String eventInformationFile = "./files/eventInformation.xml";	
+	public static String eventInformationFile = "./files/eventInformation.xml";	
 	
 	// Java classes that will be added to the apk
 	public final static String javaPackageToAdd = "de.ecspride.javaclasses";
@@ -170,6 +170,7 @@ public class Settings {
 					+ "-androidJar </path/to/android.jar>\n"
 					/* + "-instrumentationType [hybrid|complete]\n" */
 					+ "-taintWrapper </path/to/taintWrapper.txt>\n"
+					+ "-eventInformationFile </path/to/taintWrapper.txt>\n"
 					+ "-j enable Jimple output\n" 
 					+ "-o output directory\n"
 					+ "-pdp a.b.c:a.b.c.PDPClass\n"
@@ -231,6 +232,9 @@ public class Settings {
 				} else if (args[i].equals("-pdp")) {
 					pdpClass = args[++i];
 					log.info("PDP target class: "+ pdpClass);
+				} else if (args[i].equals("-eventInformationFile")) {
+					eventInformationFile = args[++i];
+					log.info("Event information file from: "+ eventInformationFile);
 				} else {
 					System.err.println("unknown option '"+ args[i] +"'");
 					printHelp();
