@@ -18,6 +18,7 @@ public class InstrumentationHelper {
 	private final static String keyBaseName = "taintinfo";
 	private static String pdpPackage = "de.tum.in.i22.uc.pdp.android";
 	private static String pdpClassFull = "de.tum.in.i22.uc.pdp.android.pdpService";
+	private static String applicationPackageName = "";
 	
 	public static Map<Integer, Set<String>> sourceSinkConnection = new HashMap<Integer, Set<String>>();
 	
@@ -88,6 +89,10 @@ public class InstrumentationHelper {
 					event.putString("DATA_" + cat, "true");
 			}
 		}
+		
+		// add information about
+		event.putString("APP_PACKAGE_NAME", applicationPackageName);
+		
 		Log.i("PEP", "event: "+ event.toString());
 
 		return InstrumentationHelper.eventPep.isStmtExecutionAllowed(event);

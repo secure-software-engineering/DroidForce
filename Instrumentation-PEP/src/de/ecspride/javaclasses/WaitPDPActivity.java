@@ -32,6 +32,7 @@ public class WaitPDPActivity extends Activity {
 	// will be setup automatically during 
 	// the instrumenting of an app.
 	String mainActivityClassname = "";
+	String applicationPackageName = "";
 	
 	Handler mHandler = new Handler();
 

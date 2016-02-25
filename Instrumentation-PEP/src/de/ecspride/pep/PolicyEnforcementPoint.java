@@ -27,6 +27,7 @@ import soot.RefType;
 import soot.Scene;
 import soot.ShortType;
 import soot.SootClass;
+import soot.SootField;
 import soot.SootMethod;
 import soot.Type;
 import soot.Unit;
@@ -134,6 +135,11 @@ public class PolicyEnforcementPoint implements ResultsAvailableHandler{
 		String mainActivityClass = UpdateManifestAndCodeForWaitPDP.getMainActivityName(Settings.instance.getApkPath());
 		String packageName = UpdateManifestAndCodeForWaitPDP.getApplicationPackageName(Settings.instance.getApkPath());
 		UpdateManifestAndCodeForWaitPDP.updateWaitPDPActivity(packageName, mainActivityClass);
+		
+		// update packagename in field of WaitPDP class
+		SootClass sc = Scene.v().getSootClass(Settings.INSTRUMENTATION_HELPER_JAVA);
+		SootField sf1 = sc.getFieldByName("applicationPackageName");
+		Util.changeConstantStringInField(sf1, packageName);
 		
 		log.info("Adding Policy Enforcement Points (PEPs).");
 		doAccessControlChecks(cfg);
