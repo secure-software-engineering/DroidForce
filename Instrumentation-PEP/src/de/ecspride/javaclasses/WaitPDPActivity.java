@@ -158,7 +158,7 @@ public class WaitPDPActivity extends Activity {
 		Intent i = new Intent();
 		String targetClass = mainActivityClassname.replaceAll("\\.[^\\.]*$", "");
 		i.setClassName(targetClass, this.mainActivityClassname);
-		Log.i("DroidForce", "start main activity...");
+		Log.i("DroidForce", "start main activity with packageName = '" + targetClass + "' and className = '" + this.mainActivityClassname + "'...");
 		this.startActivity(i);
 	}
 

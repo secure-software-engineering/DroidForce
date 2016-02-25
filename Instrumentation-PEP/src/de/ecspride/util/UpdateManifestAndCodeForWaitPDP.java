@@ -111,6 +111,40 @@ public class UpdateManifestAndCodeForWaitPDP {
 
 		return mainActivityName;
 	}
+	
+	/**
+	 * Get the package name of the application
+	 * @param apkFileLocation
+	 * @return
+	 */
+	public static String getApplicationPackageName(String apkFileLocation) {
+		String packageName = null;
+		try {
+			ProcessManifest pm = new ProcessManifest(apkFileLocation);
+			AXmlHandler axmlh = pm.getAXml(); 
+			
+			// Find main activity and remove main intent-filter
+			List<AXmlNode> anodes = axmlh.getNodesWithTag("manifest");
+			for (AXmlNode an: anodes) {
+				boolean hasMain = false;
+				boolean hasLauncher = false;
+				AXmlNode filter = null;
+				
+				AXmlAttribute aname = an.getAttribute("package");
+				String aval = (String)aname.getValue();
+				packageName = aval;
+				System.out.println("package: "+ packageName);
+				break;
+				
+			}
+		} catch (IOException | XmlPullParserException ex) {
+			System.err.println("Could not read Android manifest file: " + ex.getMessage());
+			throw new RuntimeException(ex);
+		}
+
+		return packageName;
+	}
+
 
 	/**
 	 * Redirect the main activity in the AndroidManifiest.xml file
@@ -186,8 +220,14 @@ public class UpdateManifestAndCodeForWaitPDP {
 	/**
 	 * 
 	 * @param mainActivityClass
+	 * @param mainActivityClass 
 	 */
-	public static void updateWaitPDPActivity(String mainActivityClass) {
+	public static void updateWaitPDPActivity(String packageName, String mainActivityClass) {
+		
+		if (mainActivityClass.startsWith(".")) {
+			mainActivityClass = packageName + mainActivityClass;
+		}
+		
 		SootClass sc = Scene.v().getSootClass("de.ecspride.javaclasses.WaitPDPActivity");
 		SootMethod sm = sc.getMethodByName("<init>");
 		Body b = sm.retrieveActiveBody();
@@ -196,8 +236,10 @@ public class UpdateManifestAndCodeForWaitPDP {
 				AssignStmt asg = (AssignStmt)u;
 				if (asg.getRightOp() instanceof StringConstant) {
 					StringConstant cst = (StringConstant)asg.getRightOp();
+					System.out.println("cst: "+ cst);
 					if (cst.value.equals("")) {
 						asg.setRightOp(StringConstant.v(mainActivityClass));
+						System.out.println("asg: "+ asg);
 					}
 				}
 			}
