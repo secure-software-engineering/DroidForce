@@ -280,15 +280,17 @@ public class pdpService extends Service
         event.addParam(new Param<String>(paramName, paramValue, Constants.PARAMETER_TYPE_STRING));
       }
 
-      for(String key : msg.getData().keySet())
-      {
-        if(key.startsWith("DATA_"))
-        {
-          String paramName=key;
-          String paramValue=msg.getData().getString(key);
+      for(String key : msg.getData().keySet()) {
 
-          event.addParam(new Param<String>(paramName, paramValue, Constants.PARAMETER_TYPE_STRING));
-        }
+    	  if(key.startsWith("DATA_")) {
+    		  String paramName=key;
+    		  String paramValue=msg.getData().getString(key);
+    		  event.addParam(new Param<String>(paramName, paramValue, Constants.PARAMETER_TYPE_STRING));
+    	  } else if (key.startsWith("APP_PACKAGE_NAME")) {
+    		  String paramName = key;
+    		  String paramValue = msg.getData().getString(key);
+    		  event.addParam(new Param<String>(paramName, paramValue, Constants.PARAMETER_TYPE_STRING));
+    	  }
       }
 
       return event;
