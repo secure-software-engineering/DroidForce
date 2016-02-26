@@ -168,6 +168,62 @@ public class UpdateManifestAndCodeForWaitPDP {
 			String tag_ns = null;
 			System.out.println("attr_ns: "+ attr_ns +" tag_ns: "+ tag_ns);
 			
+			// remove MAIN and LAUNCHER filters from the original main activity, so we do not
+			// end with having two launcher icons on the desktop
+			{
+				String mainActivityName = getMainActivityName(apkFileLocation);
+				List<AXmlNode> activityNodes = axmlh.getNodesWithTag("activity");
+				AXmlNode mainActNode = null;
+				for (AXmlNode n: activityNodes) {
+					AXmlAttribute<?> name = n.getAttribute("name");
+					String value = (String) name.getValue();
+					if (value.equals(mainActivityName)) {
+						mainActNode = n;
+						break;
+					}
+				}
+				if (mainActNode == null) {
+					throw new RuntimeException("error: main activity not found in manifest!");
+				}
+				// get filters
+				AXmlNode filterToremove = null;
+				List<AXmlNode> filters = mainActNode.getChildren();
+				for (AXmlNode fn: filters) {
+					boolean hasMain = false;
+					boolean hasLauncher = false;
+					// check action
+					List<AXmlNode> acnodes = fn.getChildrenWithTag("action");
+					for (AXmlNode acn: acnodes) {
+						AXmlAttribute acname = acn.getAttribute("name");
+						String acval = (String)acname.getValue();
+						System.out.println("action: "+ acval);
+						if (acval.equals("android.intent.action.MAIN")) {
+							hasMain = true;
+						}
+					}
+					// check category
+					List<AXmlNode> catnodes = fn.getChildrenWithTag("category");
+					for (AXmlNode catn: catnodes) {
+						AXmlAttribute catname = catn.getAttribute("name");
+						String catval = (String)catname.getValue();
+						System.out.println("category: "+ catval);
+						if (catval.equals("android.intent.category.LAUNCHER")) {
+							hasLauncher = true;
+						}
+					}
+					if (hasLauncher && hasMain) {
+						filterToremove = fn;
+						break;
+					}
+				}
+				if (filterToremove == null) {
+					throw new RuntimeException("error: did not found filter with MAIN/LAUNCHER.");
+				}
+				mainActNode.removeChild(filterToremove);
+//				filters.remove(filterToremove);
+//				filterToremove.setParent(null);
+			}
+			
 		    AXmlNode mainActivity = new AXmlNode("activity", tag_ns, null);
 		    mainActivity.addAttribute(new AXmlAttribute<String>("name", "de.ecspride.javaclasses.WaitPDPActivity",  attr_ns));
 		    appnode.addChild(mainActivity);
@@ -256,7 +312,7 @@ public class UpdateManifestAndCodeForWaitPDP {
 			File background_picture = new File("resources", "protect.png");
 			if (!background_picture.exists()) {
 				// Load the file from the JAR
-				URL fileURL = UpdateManifestAndCodeForWaitPDP.class.getResource("/protect.png");
+				URL fileURL = UpdateManifestAndCodeForWaitPDP.class.getResource("protect.png");
 				
 				// Copy the file local
 				tempFile = File.createTempFile("droidForce", null);
