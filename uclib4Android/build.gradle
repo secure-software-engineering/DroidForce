@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "21.0.1"
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
         minSdkVersion 19
@@ -34,7 +34,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:19.+'
+    compile 'com.android.support:support-v4:21.+'
     compile 'com.google.guava:guava:16.0.1'
     compile files('libs/activation.jar')
     compile files('libs/additionnal.jar')
