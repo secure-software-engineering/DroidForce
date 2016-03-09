@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "21.0.1"
+    compileSdkVersion 21
+    buildToolsVersion "21.1.2"
 
     defaultConfig {
         minSdkVersion 19
@@ -13,18 +13,18 @@ android {
       main {
         manifest.srcFile 'AndroidManifest.xml'
         java.srcDirs = ['src']
-        
+
         resources.srcDirs = ['src']
         aidl.srcDirs = ['src']
-        
+
         renderscript.srcDirs = ['src']
-        
+
         res.srcDirs = ['res']
         assets.srcDirs = ['assets']
-        
+
       }
     }
-    
+
     buildTypes {
         release {
             minifyEnabled false
@@ -34,7 +34,7 @@ android {
 }
 
 dependencies {
-    compile 'com.android.support:support-v4:19.1.0'
+    compile 'com.android.support:support-v4:21.+'
     compile 'com.google.guava:guava:16.0.1'
     compile files('libs/activation.jar')
     compile files('libs/additionnal.jar')
